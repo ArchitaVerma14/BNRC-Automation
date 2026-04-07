@@ -1,0 +1,19 @@
+{
+  "email": "testuser123@gmail.com",
+  "phone": "9976945550",
+  "name": "TestProfessional",
+  "fatherName": "Father Test",
+  "dob": "2004-05-14",
+  "qualification": "Bachelor's in Nursing (BSN)",
+  "institution": "Nurse University",
+  "location": "Patna",
+  "startDate": "2022-01-13",
+  "endDate": "2022-05-10",
+  "jobTitle": "Registered Nurse",
+  "companyName": "abcCompany",
+  "workLocation": "abc",
+  "workStartDate": "2024-08-15",
+  "workEndDate": "2025-02-20",
+  "captcha": "1",
+  "agreementCheckbox": true
+}
