@@ -1,0 +1,53 @@
+Timestamp,ApplicationNO,UserID,Status,Message
+"2025-12-10T06:54:26.303Z","NI_69131231","TEMP94434101","Failed","locator.click: Test timeout of 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('ng-select div').nth(3)[22m
+"
+"2025-12-10T06:57:59.787Z","NI_69131231","TEMP94434101","Failed","locator.click: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('ng-select div').nth(3)[22m
+"
+"2025-12-10T06:59:56.134Z","NI_69131231","TEMP94434101","Failed","locator.click: Test timeout of 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('ng-select div').nth(3)[22m
+"
+"2025-12-10T07:02:11.553Z","NI_69131231","TEMP94434101","Failed","locator.click: Test timeout of 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('ng-select div').nth(3)[22m
+"
+"2025-12-10T07:05:05.257Z","NI_69131231","TEMP94434101","Failed","locator.click: Test timeout of 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('ng-select div').nth(3)[22m
+"
+"2025-12-10T07:07:16.715Z","NI_69131231","TEMP94434101","Failed","locator.click: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('ng-select div').nth(3)[22m
+"
+"2025-12-10T07:11:47.413Z","NI_69131231","TEMP94434101","Failed","locator.click: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('ng-select div').nth(3)[22m
+"
+"2025-12-10T07:14:00.669Z","NI_69131231","TEMP94434101","Failed","locator.click: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('ng-select div').nth(3)[22m
+"
+"2025-12-10T07:16:57.236Z","NI_69131231","TEMP94434101","Failed","locator.click: Test timeout of 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('ng-select div').nth(3)[22m
+"
+"2025-12-10T07:22:42.822Z","NI_69131231","TEMP94434101","Failed","locator.click: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('ng-select div').nth(3)[22m
+"
+"2025-12-10T07:25:05.828Z","NI_69131231","TEMP94434101","Failed","page.waitForSelector: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('input[name='password']') to be visible[22m
+"
+"2025-12-10T07:54:25.330Z","NI_69131231","TEMP94434101","Failed","page.waitForSelector: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('input[name='password']') to be visible[22m
+"
+"2025-12-10T07:55:05.293Z","NI_69131231","TEMP94434101","Failed","locator.click: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('ng-select div').nth(3)[22m
+"

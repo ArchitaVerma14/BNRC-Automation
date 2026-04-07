@@ -1,0 +1,39 @@
+{
+  "name": "bnrc-tests",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/e-applications/foreign.js --reporter spec",
+    "test:foreign_copy": "mocha test/e-applications/foreign_copy.js --reporter spec",
+    "test:transfer": "mocha test/e-applications/transfer.js --reporter spec",
+    "test:transfer_copy": "mocha test/e-applications/transfer_copy.js --reporter spec",
+    "test:prod:transfer": "mocha test/prod/transfer.js --reporter spec",
+    "test:prod:foreign": "mocha test/prod/foreign.js --reporter spec",
+    "test:trial1": "mocha test/e-applications/trial1.js --reporter spec"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@faker-js/faker": "^10.3.0",
+    "@types/papaparse": "^5.5.1",
+    "axios": "^1.11.0",
+    "chai": "^6.0.1",
+    "csv-parse": "^6.1.0",
+    "csv-parser": "^3.2.0",
+    "faker": "^5.5.3",
+    "mocha": "^11.3.0",
+    "selenium-webdriver": "^4.41.0",
+    "verhoeff": "^0.0.5",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.1",
+    "@types/node": "^24.6.0",
+    "chromedriver": "^146.0.6"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "description": ""
+}

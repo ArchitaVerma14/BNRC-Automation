@@ -1,0 +1,39 @@
+run_no,temp_id,timestamp
+1,NOT_FOUND,2025-12-10T14:11:06.834Z
+2,NOT_FOUND,2025-12-10T14:11:14.903Z
+3,NOT_FOUND,2025-12-10T14:11:23.022Z
+4,NOT_FOUND,2025-12-10T14:11:30.068Z
+5,NOT_FOUND,2025-12-10T14:11:34.503Z
+6,NOT_FOUND,2025-12-10T14:11:35.518Z
+7,NOT_FOUND,2025-12-10T14:11:36.527Z
+8,NOT_FOUND,2025-12-10T14:11:37.547Z
+1,NOT_FOUND,2025-12-10T14:12:32.822Z
+2,NOT_FOUND,2025-12-10T14:12:37.443Z
+3,NOT_FOUND,2025-12-10T14:12:38.461Z
+1,NOT_FOUND,2025-12-10T14:15:21.880Z
+1,NOT_FOUND,2025-12-10T14:22:36.967Z,FAILED,"element click intercepted: Element <input _ngcontent-ng-c103161464="""" type=""text"" placeholder=""DD-MM-YYYY"" bsdatepicker="""" formcontrolname=""dob"" name=""dob"" autocomplete=""off"" class=""form-control ng-untouched ng-pristine ng-invalid""> is not clickable at point (656, 290). Other element would receive the click: <div _ngcontent-ng-c2720958613="""" class=""ng-tns-c2720958613-0 la-3x la-ball-spin-clockwise-fade ng-star-inserted"" style=""color: rgb(30, 201, 79);"">...</div>
+  (Session info: chrome=143.0.7499.40)"
+2,NOT_FOUND,2025-12-10T14:23:01.982Z,FAILED,"pickDate: failed selecting year -> Year element not found: 2022"
+3,NOT_FOUND,2025-12-10T14:23:11.799Z,FAILED,"no such window: target window already closed
+from unknown error: web view not found
+  (Session info: chrome=143.0.7499.40)"
+1,NOT_FOUND,2025-12-24T14:12:43.895Z,FAILED,"target frame detached
+  (failed to check if window was closed: disconnected: unable to send message to renderer)
+  (Session info: chrome=143.0.7499.147)"
+2,NOT_FOUND,2025-12-24T14:12:49.251Z,FAILED,"no such window: target window already closed
+from unknown error: web view not found
+  (Session info: chrome=143.0.7499.147)"
+1,NOT_FOUND,2025-12-24T14:13:56.041Z,FAILED,"Option ""GAYA"" not found for select[formcontrolname='districtId']. Available: -- Select Home District --, ARARIA, ARWAL, AURANGABAD, BANKA, BEGUSARAI, BHAGALPUR, BHOJPUR, BUXAR, DARBHANGA, GAYA JI, GOPALGANJ, JAMUI, JEHANABAD, KAIMUR (BHABUA), KATIHAR, KHAGARIA, KISHANGANJ, LAKHISARAI, MADHEPURA, MADHUBANI, MUNGER, MUZAFFARPUR, NALANDA, NAWADA, PASHCHIM CHAMPARAN, PATNA, PURBI CHAMPARAN, PURNIA, ROHTAS, SAHARSA, SAMASTIPUR, SARAN, SHEIKHPURA, SHEOHAR, SITAMARHI, SIWAN, SUPAUL, VAISHALI"
+2,NOT_FOUND,2025-12-24T14:14:17.468Z,FAILED,"Option ""GAYA"" not found for select[formcontrolname='districtId']. Available: -- Select Home District --, ARARIA, ARWAL, AURANGABAD, BANKA, BEGUSARAI, BHAGALPUR, BHOJPUR, BUXAR, DARBHANGA, GAYA JI, GOPALGANJ, JAMUI, JEHANABAD, KAIMUR (BHABUA), KATIHAR, KHAGARIA, KISHANGANJ, LAKHISARAI, MADHEPURA, MADHUBANI, MUNGER, MUZAFFARPUR, NALANDA, NAWADA, PASHCHIM CHAMPARAN, PATNA, PURBI CHAMPARAN, PURNIA, ROHTAS, SAHARSA, SAMASTIPUR, SARAN, SHEIKHPURA, SHEOHAR, SITAMARHI, SIWAN, SUPAUL, VAISHALI"
+3,NOT_FOUND,2025-12-24T14:14:21.816Z,FAILED,"invalid session id"
+1,NOT_FOUND,2025-12-24T14:16:15.042Z,FAILED,"pickDate: failed selecting year -> Year element not found: 2022"
+2,NOT_FOUND,2025-12-24T14:17:00.526Z,FAILED,"pickDate: failed selecting year -> Year element not found: 2022"
+1,NOT_FOUND,2025-12-24T14:22:22.674Z,FAILED,"pickDate: failed selecting year -> Year element not found: 2022"
+1,NOT_FOUND,2025-12-24T14:28:55.886Z,FAILED,"pickDate: failed selecting year -> Year element not found: 2021"
+1,NOT_FOUND,2025-12-24T14:35:53.219Z,FAILED,"Invalid locator"
+1,NOT_FOUND,2025-12-24T14:38:29.665Z,FAILED,"Waiting for element to be located By(css selector, .mat-calendar-period-button)
+Wait timed out after 5061ms"
+1,NOT_FOUND,2025-12-24T14:42:02.163Z,FAILED,"Waiting for element to be located By(css selector, .mat-calendar-period-button)
+Wait timed out after 5104ms"
+1,NOT_FOUND,2025-12-24T14:44:29.230Z,FAILED,"Waiting for element to be located By(css selector, .mat-calendar-period-button)
+Wait timed out after 5024ms"

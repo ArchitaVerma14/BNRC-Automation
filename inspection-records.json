@@ -1,0 +1,457 @@
+[
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T05:39:51.964Z"
+  },
+  {
+    "tempId": "TEMP80086",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T05:40:55.447Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T06:15:33.991Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T06:21:26.358Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T06:23:45.908Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T06:27:46.034Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T06:47:27.531Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T06:47:59.736Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T06:50:17.175Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T06:51:07.631Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T07:04:02.415Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T07:16:53.838Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T07:18:54.074Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T07:21:28.853Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T07:23:06.824Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T07:24:14.619Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T07:28:50.045Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T07:30:44.336Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T07:32:24.310Z"
+  },
+  {
+    "tempId": "TEMP56107",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T07:33:07.144Z"
+  },
+  {
+    "tempId": "TEMP80086",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T07:33:11.264Z"
+  },
+  {
+    "tempId": "TEMP80086",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T07:38:17.554Z"
+  },
+  {
+    "tempId": "TEMP80086",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T07:41:19.569Z"
+  },
+  {
+    "tempId": "TEMP80086",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T08:39:12.142Z"
+  },
+  {
+    "tempId": "TEMP80086",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T08:43:11.472Z"
+  },
+  {
+    "tempId": "TEMP80086",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T08:45:56.070Z"
+  },
+  {
+    "tempId": "TEMP80086",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T08:52:27.831Z"
+  },
+  {
+    "tempId": "TEMP80086",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T08:53:51.582Z"
+  },
+  {
+    "tempId": "TEMP30333",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T08:54:07.464Z"
+  },
+  {
+    "tempId": "TEMP75209",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T08:54:21.743Z"
+  },
+  {
+    "tempId": "TEMP75209",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T08:55:18.362Z"
+  },
+  {
+    "tempId": "TEMP20904",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T08:55:35.062Z"
+  },
+  {
+    "tempId": "TEMP20904",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T08:57:04.021Z"
+  },
+  {
+    "tempId": "TEMP20904",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T09:01:51.320Z"
+  },
+  {
+    "tempId": "TEMP21250",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T09:02:11.037Z"
+  },
+  {
+    "tempId": "TEMP21250",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T09:03:30.525Z"
+  },
+  {
+    "tempId": "TEMP21250",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T09:05:40.335Z"
+  },
+  {
+    "tempId": "TEMP21250",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T09:09:28.273Z"
+  },
+  {
+    "tempId": "TEMP21250",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T09:13:11.183Z"
+  },
+  {
+    "tempId": "TEMP21250",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T09:14:00.082Z"
+  },
+  {
+    "tempId": "TEMP21250",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T09:14:44.196Z"
+  },
+  {
+    "tempId": "TEMP21250",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T09:20:34.533Z"
+  },
+  {
+    "tempId": "TEMP21250",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T09:25:06.470Z"
+  },
+  {
+    "tempId": "TEMP21250",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T09:28:29.304Z"
+  },
+  {
+    "tempId": "TEMP58689",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T09:31:20.042Z"
+  },
+  {
+    "tempId": "TEMP58689",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T13:58:48.333Z"
+  },
+  {
+    "tempId": "TEMP56126",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T13:59:04.392Z"
+  },
+  {
+    "tempId": "TEMP59333",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T13:59:21.863Z"
+  },
+  {
+    "tempId": "TEMP33694",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T13:59:33.675Z"
+  },
+  {
+    "tempId": "TEMP99416",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T13:59:51.422Z"
+  },
+  {
+    "tempId": "TEMP99416",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:00:53.289Z"
+  },
+  {
+    "tempId": "TEMP70325",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:01:09.364Z"
+  },
+  {
+    "tempId": "TEMP70325",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:06:55.987Z"
+  },
+  {
+    "tempId": "TEMP18515",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:07:11.784Z"
+  },
+  {
+    "tempId": "TEMP18515",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:08:51.778Z"
+  },
+  {
+    "tempId": "TEMP35724",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:09:08.513Z"
+  },
+  {
+    "tempId": "TEMP52803",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:09:25.074Z"
+  },
+  {
+    "tempId": "TEMP87903",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:09:40.307Z"
+  },
+  {
+    "tempId": "TEMP86827",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:10:00.215Z"
+  },
+  {
+    "tempId": "TEMP61205",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:15:03.746Z"
+  },
+  {
+    "tempId": "TEMP61205",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:17:07.631Z"
+  },
+  {
+    "tempId": "TEMP34513",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:18:14.901Z"
+  },
+  {
+    "tempId": "TEMP34513",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:20:12.859Z"
+  },
+  {
+    "tempId": "TEMP34513",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:21:16.445Z"
+  },
+  {
+    "tempId": "TEMP34513",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:25:36.298Z"
+  },
+  {
+    "tempId": "TEMP83432",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:25:47.847Z"
+  },
+  {
+    "tempId": "TEMP62214",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:26:00.271Z"
+  },
+  {
+    "tempId": "TEMP41716",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:26:12.137Z"
+  },
+  {
+    "tempId": "TEMP84529",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:26:24.668Z"
+  },
+  {
+    "tempId": "TEMP85320",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:26:36.930Z"
+  },
+  {
+    "tempId": "TEMP85320",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:31:01.534Z"
+  },
+  {
+    "tempId": "TEMP69232",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:31:51.553Z"
+  },
+  {
+    "tempId": "TEMP69232",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:47:44.737Z"
+  },
+  {
+    "tempId": "TEMP69232",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:49:24.955Z"
+  },
+  {
+    "tempId": "TEMP69034",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:49:39.268Z"
+  },
+  {
+    "tempId": "TEMP63682",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:49:51.516Z"
+  },
+  {
+    "tempId": "TEMP73222",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:50:02.841Z"
+  },
+  {
+    "tempId": "TEMP85320",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:50:06.581Z"
+  },
+  {
+    "tempId": "TEMP85320",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:52:11.840Z"
+  },
+  {
+    "tempId": "TEMP13529",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:52:23.741Z"
+  },
+  {
+    "tempId": "TEMP97651",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:52:35.257Z"
+  },
+  {
+    "tempId": "TEMP61205",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T14:52:47.355Z"
+  },
+  {
+    "tempId": "TEMP81399",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T14:57:08.451Z"
+  },
+  {
+    "tempId": "TEMP74322",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T15:03:48.964Z"
+  },
+  {
+    "tempId": "TEMP86827",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T15:04:19.311Z"
+  },
+  {
+    "tempId": "TEMP86827",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T15:05:38.539Z"
+  },
+  {
+    "tempId": "TEMP23505",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T15:08:03.655Z"
+  },
+  {
+    "tempId": "TEMP54420",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T15:12:01.806Z"
+  },
+  {
+    "tempId": "TEMP73218",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T15:14:32.038Z"
+  },
+  {
+    "tempId": "TEMP76900",
+    "status": "FAILED",
+    "timestamp": "2025-12-09T15:16:29.286Z"
+  },
+  {
+    "tempId": "TEMP76680",
+    "status": "SUCCESS",
+    "timestamp": "2025-12-09T15:18:15.124Z"
+  }
+]

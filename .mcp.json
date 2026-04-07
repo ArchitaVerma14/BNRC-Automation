@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "selenium": {
+      "command": "npx",
+      "args": ["-y", "@angiejones/mcp-selenium"]
+    },
+    "playwright-mcp": {
+      "command": "npx",
+      "args": ["ts-node", "server.ts"],
+      "cwd": "playwright-mcp"
+    }
+  }
+}

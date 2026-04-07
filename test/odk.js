@@ -1,0 +1,92 @@
+import { test, expect } from '@playwright/test';
+
+test('test', async ({ page }) => {
+  await page.goto('https://sangrahiuat.piramalswasthya.org/-/single/c11e397358ed051c99ebc4f44d9ca89b0536f8b96b85722b7e9b9edbd94fc5c2?st=wcqKnpg6el1DdPOriozXiXNFbXIZTIHEI0!ZSsWB2!V1NQ!JI1VmZjpbXW6a7iDI');
+  await expect(page.getByRole('group', { name: '1. Is the X-ray Centre' })).toBeVisible();
+
+  await page.getByRole('textbox', { name: 'search for place or address' }).click();
+  await page.getByRole('textbox', { name: 'search for place or address' }).fill('patna');
+  await page.getByRole('button', { name: '' }).click();
+  await page.getByRole('spinbutton', { name: 'latitude (x.y °)' }).click();
+  await page.getByRole('spinbutton', { name: 'latitude (x.y °)' }).fill('34');
+  await page.getByRole('spinbutton', { name: 'longitude (x.y °)' }).click();
+  await page.getByRole('spinbutton', { name: 'longitude (x.y °)' }).fill('34');
+  await page.getByRole('spinbutton', { name: 'altitude (m)' }).click();
+  await page.getByRole('spinbutton', { name: 'altitude (m)' }).fill('33');
+  await page.getByRole('spinbutton', { name: 'accuracy (m)' }).click();
+  await page.getByRole('spinbutton', { name: 'accuracy (m)' }).fill('22');
+  await page.locator('label').filter({ hasText: 'Select Agency (X-Ray Service' }).getByRole('button').click();
+  await page.getByRole('link', { name: 'Anikra' }).click();
+  await expect(page.getByRole('button', { name: 'Anikra' })).toBeVisible();
+
+  await page.locator('label').filter({ hasText: 'Select District*...' }).getByRole('button').click();
+  await page.getByRole('link', { name: 'Arwal' }).click();
+  await expect(page.getByRole('button', { name: 'Arwal' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'none selected' }).click();
+  await page.getByRole('link', { name: 'District Hospital, Arwal' }).click();
+  await expect(page.getByRole('button', { name: 'District Hospital, Arwal' })).toBeVisible();
+
+  await page.getByRole('group', { name: '1. Is the X-ray Centre' }).getByLabel('Yes').check();
+  await expect(page.getByRole('group', { name: '1a. If Yes, is there any' })).toBeVisible();
+
+  await page.getByRole('group', { name: '1a. If Yes, is there any' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '2. Is the x-ray room and' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '3. Availability of Lead' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '4. Availability of Lead glass' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '5. Is Warning Light installed' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '6. Is Warning light' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '7. Availability of Chest' }).locator('label').nth(1).click();
+  await page.getByRole('group', { name: '8. Display of radiation' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '9. Display of warning signage' }).locator('label').nth(1).click();
+  await page.getByRole('group', { name: '10. IEC Displaying timings' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '11a. Is X-Ray equipment' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '11b. Display of AERB Licence' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '12a. Is proper data-entry' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '12b. Is the data for time of' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '12c. Copy of BHAVYA coupons' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '12d. Copy of Prescription/OPD' }).getByLabel('Yes').check();
+  await page.getByRole('spinbutton', { name: '12e. Total no of of patients' }).click();
+  await page.getByRole('group', { name: '12d. Copy of Prescription/OPD' }).getByLabel('Yes').press('3');
+  await page.getByRole('spinbutton', { name: '12e. Total no of of patients' }).fill('3');
+  await page.getByRole('spinbutton', { name: '12f. How many patients were' }).click();
+  await page.getByRole('spinbutton', { name: '12f. How many patients were' }).click();
+  await page.getByRole('spinbutton', { name: '12f. How many patients were' }).fill('4');
+  await page.getByRole('group', { name: '13a. Protective (Mobile)' }).getByLabel('Yes').check();
+  await expect(page.getByRole('spinbutton', { name: '12f. How many patients were' })).toBeVisible();
+
+  await page.getByRole('group', { name: '13b. Lead Apron * Physical' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '13c. Goggles * Physical' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '13d. Thyroid Shields *' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '14a. Provision of ID Cards' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '14b. Is X-ray technician' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '15a. Is technological' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '16a. Availability of SOP (' }).getByLabel('Yes').check();
+  await page.getByRole('group', { name: '16b. Equipment downtime' }).getByLabel('Yes').check();
+  await page.getByRole('spinbutton', { name: '16c. No. of days the X-ray' }).click();
+  await page.getByRole('spinbutton', { name: '16c. No. of days the X-ray' }).click();
+  await page.getByRole('spinbutton', { name: '16c. No. of days the X-ray' }).fill('5');
+  await page.getByRole('spinbutton', { name: '16d. No. of days with power' }).click();
+  await page.getByRole('spinbutton', { name: '16d. No. of days with power' }).fill('6');
+  await page.getByRole('group', { name: '16e. Availability of power' }).getByLabel('Yes').check();
+  await page.locator('input[name="/data/gp1/q17a_p1"]').nth(1).check();
+  await page.locator('input[name="/data/gp1/q17b_p1"]').nth(1).check();
+  await page.locator('input[name="/data/gp1/q17c_p1"]').nth(1).check();
+  await page.locator('input[name="/data/gp1/q17d_p1"]').nth(1).check();
+  await page.locator('input[name="/data/gp2/q17a_p2"]').nth(1).check();
+  await page.locator('input[name="/data/gp2/q17b_p2"]').nth(1).check();
+  await page.locator('input[name="/data/gp2/q17c_p2"]').nth(1).check();
+  await page.locator('input[name="/data/gp2/q17d_p2"]').nth(1).check();
+  await page.locator('input[name="/data/gp3/q17a_p3"]').nth(1).check();
+  await page.locator('input[name="/data/gp3/q17b_p3"]').nth(1).check();
+  await page.locator('input[name="/data/gp3/q17c_p3"]').nth(1).check();
+  await page.locator('input[name="/data/gp3/q17d_p3"]').nth(1).check();
+  await page.getByRole('textbox', { name: 'Name of X-Ray Technician *' }).click();
+  await page.getByRole('textbox', { name: 'Name of X-Ray Technician *' }).fill('ssssssssssssssss');
+  await page.getByRole('textbox', { name: 'Name of Nodal Person (HM/BHM' }).click();
+  await page.getByRole('textbox', { name: 'Name of Nodal Person (HM/BHM' }).fill('rrrrrrrrrrrrrrrrrr');
+  await page.getByRole('textbox', { name: 'Name of Superintendent/DS/' }).click();
+  await page.getByRole('textbox', { name: 'Name of Superintendent/DS/' }).fill('fffffffffff');
+  await page.getByRole('textbox', { name: 'Name of State Representative *' }).click();
+  await page.getByRole('textbox', { name: 'Name of State Representative *' }).fill('dddddddddd');
+});
