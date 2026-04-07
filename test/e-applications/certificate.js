@@ -46,6 +46,9 @@ describe('Certificate Verification Automation', function () {
 
             const options = new chrome.Options();
             options.addArguments('--start-maximized');
+            options.addArguments('--headless=new');
+            options.addArguments('--no-sandbox');
+            options.addArguments('--disable-dev-shm-usage');
 
             console.log("STEP B: Building driver...");
 

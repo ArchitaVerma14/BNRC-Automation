@@ -59,6 +59,9 @@ describe('Foreign Verification Automation', function () {
             options.addArguments('--ignore-certificate-errors');
             options.addArguments('--disable-web-security');
             options.addArguments('--start-maximized');
+            options.addArguments('--headless=new');
+            options.addArguments('--no-sandbox');
+            options.addArguments('--disable-dev-shm-usage');
             options.addArguments('--allow-running-insecure-content');
             // options.addArguments('--headless'); // Uncomment to run in headless mode
 

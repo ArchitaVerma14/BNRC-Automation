@@ -58,6 +58,9 @@ describe('Transfer Registration Automation', function () {
             options.addArguments('--disable-web-security');
             options.addArguments('--allow-running-insecure-content');
             options.addArguments('--start-maximized');
+            options.addArguments('--headless=new');
+            options.addArguments('--no-sandbox');
+            options.addArguments('--disable-dev-shm-usage');
             // options.addArguments('--headless'); // Uncomment to run in headless mode
 
             const service = new chrome.ServiceBuilder(chromedriver.path);
