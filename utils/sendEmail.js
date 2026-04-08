@@ -130,8 +130,9 @@ const mailOptions = {
     </ul>
 
     <p>📎 Latest screenshots are attached for reference.</p>
-    <p>🔗 Check GitHub Actions logs for detailed execution.</p>
-
+    <p>🔗 <a href="https://github.com/ArchitaVerma14/BNRC-Automation/actions" target="_blank">
+    Check GitHub Actions logs
+    </a> for detailed execution.</p>
     <br/>
     <p>Regards,<br/><b>Automation QA System</b></p>
   `,
