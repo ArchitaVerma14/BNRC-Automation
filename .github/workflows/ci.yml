@@ -33,9 +33,9 @@ jobs:
     # ✅ Run tests and capture results
     - name: Run Playwright tests
       run: |
-        npx playwright test test/e-applications/certificate.spec.js --reporter=json > cert.json || true
-        npx playwright test test/e-applications/transfer.spec.js --reporter=json > transfer.json || true
-        npx playwright test test/e-applications/foreign.spec.js --reporter=json > foreign.json || true
+        npx playwright test test/e-applications/certificate.spec.js --reporter=json --output=cert-report || true
+        npx playwright test test/e-applications/transfer.spec.js --reporter=json --output=transfer-report || true
+        npx playwright test test/e-applications/foreign.spec.js --reporter=json --output=foreign-report || true
 
     # ✅ Send email AFTER tests
     - name: Send email notification
