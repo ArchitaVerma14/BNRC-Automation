@@ -11,31 +11,45 @@ function getStatus(file) {
   try {
     const data = JSON.parse(readFileSync(file, "utf-8"));
 
-    const allTests = data.suites?.flatMap(s =>
-      s.specs?.flatMap(spec =>
-        spec.tests?.map(t => t.results?.[0]?.status)
-      )
-    );
+    let results = [];
 
-    if (!allTests || allTests.length === 0) return "NOT RUN ⚠️";
+    function extractSuites(suites) {
+      for (const suite of suites || []) {
+        if (suite.specs) {
+          for (const spec of suite.specs) {
+            for (const test of spec.tests || []) {
+              for (const result of test.results || []) {
+                results.push(result.status);
+              }
+            }
+          }
+        }
+        if (suite.suites) {
+          extractSuites(suite.suites);
+        }
+      }
+    }
 
-    if (allTests.every(status => status === "passed")) return "PASS ✅";
-    if (allTests.some(status => status === "failed")) return "FAIL ❌";
+    extractSuites(data.suites);
+
+    if (results.length === 0) return "NOT RUN ⚠️";
+
+    if (results.every(r => r === "passed")) return "PASS ✅";
+    if (results.some(r => r === "failed")) return "FAIL ❌";
 
     return "UNKNOWN ⚠️";
+
   } catch (err) {
     console.log(`Error reading ${file}:`, err.message);
     return "NOT RUN ⚠️";
   }
 }
-
 // ===============================
 // ✅ READ TEST RESULTS
 // ===============================
-const certStatus = getStatus("cert.json");
-const transferStatus = getStatus("transfer.json");
-const foreignStatus = getStatus("foreign.json");
-
+const certStatus = getStatus("cert-report.json");
+const transferStatus = getStatus("transfer-report.json");
+const foreignStatus = getStatus("foreign-report.json");
 // ===============================
 // ✅ ATTACH ONLY LATEST SCREENSHOTS
 // ===============================
