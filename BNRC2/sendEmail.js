@@ -1,5 +1,8 @@
 import nodemailer from "nodemailer";
 
+console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -12,8 +15,12 @@ const mailOptions = {
   from: process.env.EMAIL_USER,
   to: process.env.EMAIL_USER,
   subject: "CI Test Results",
-  text: "Your Selenium tests have completed. Check GitHub Actions for details.",
+  text: "Your Playwright tests have completed. Check GitHub Actions for details.",
 };
 
-await transporter.sendMail(mailOptions);
-console.log("Email sent");
+try {
+  await transporter.sendMail(mailOptions);
+  console.log("Email sent successfully");
+} catch (err) {
+  console.error("Email error:", err);
+}
