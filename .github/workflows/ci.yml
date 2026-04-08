@@ -30,12 +30,15 @@ jobs:
     - name: Clean screenshots
       run: rm -rf BNRCscreenshots/*
 
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+
     # ✅ Run tests and capture results
     - name: Run Playwright tests
       run: |
-        npx playwright test test/e-applications/certificate.spec.js --reporter=json --output=cert-report || true
-        npx playwright test test/e-applications/transfer.spec.js --reporter=json --output=transfer-report || true
-        npx playwright test test/e-applications/foreign.spec.js --reporter=json --output=foreign-report || true
+        npx playwright test test/e-applications/certificate.spec.js --project=chrome --reporter=json --output=cert-report || true
+        npx playwright test test/e-applications/transfer.spec.js --project=chrome --reporter=json --output=transfer-report || true
+        npx playwright test test/e-applications/foreign.spec.js --project=chrome --reporter=json --output=foreign-report || true
 
     # ✅ Send email AFTER tests
     - name: Send email notification
