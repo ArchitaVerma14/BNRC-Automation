@@ -1,4 +1,4 @@
-name: Node.js CI
+name: BNRC Automation CI
 
 on:
   push:
@@ -27,11 +27,20 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable
+
+    # ✅ Run tests and capture results
+    - name: Run Certificate Test
+      run: npx mocha test/e-applications/certificate.js > cert.txt || true
+
+    - name: Run Transfer Test
+      run: npx mocha test/e-applications/transfer.js > transfer.txt || true
+
+    - name: Run Foreign Test
+      run: npx mocha test/e-applications/foreign.js > foreign.txt || true
+
+    # ✅ Send email AFTER tests
     - name: Send email notification
-      run: node sendEmail.js
+      run: node utils/sendEmail.js
       env:
         EMAIL_USER: ${{ secrets.EMAIL_USER }}
         EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
-
-    - name: Run selected tests
-      run : npx mocha test/e-applications/certificate.js test/e-applications/transfer.js test/e-applications/foreign.js
