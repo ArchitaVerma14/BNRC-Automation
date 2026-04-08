@@ -27,16 +27,15 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable
+    - name: Clean screenshots
+      run: rm -rf BNRCscreenshots/*
 
     # ✅ Run tests and capture results
-    - name: Run Certificate Test
-      run: npx mocha test/e-applications/certificate.js > cert.txt || true
-
-    - name: Run Transfer Test
-      run: npx mocha test/e-applications/transfer.js > transfer.txt || true
-
-    - name: Run Foreign Test
-      run: npx mocha test/e-applications/foreign.js > foreign.txt || true
+    - name: Run Playwright tests
+      run: |
+        npx playwright test test/e-applications/certificate.spec.js --reporter=json > cert.json || true
+        npx playwright test test/e-applications/transfer.spec.js --reporter=json > transfer.json || true
+        npx playwright test test/e-applications/foreign.spec.js --reporter=json > foreign.json || true
 
     # ✅ Send email AFTER tests
     - name: Send email notification
