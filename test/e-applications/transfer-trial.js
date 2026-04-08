@@ -57,6 +57,10 @@ describe('Transfer Registration Automation', function () {
             options.addArguments('--ignore-certificate-errors');
             options.addArguments('--disable-web-security');
             options.addArguments('--allow-running-insecure-content');
+            options.addArguments('--start-maximized');
+            options.addArguments('--headless=new');
+            options.addArguments('--no-sandbox');
+            options.addArguments('--disable-dev-shm-usage');
             // options.addArguments('--headless'); // Uncomment to run in headless mode
 
             const service = new chrome.ServiceBuilder(chromedriver.path);
@@ -79,14 +83,45 @@ describe('Transfer Registration Automation', function () {
     it('should register a Transfer Registration with sample data', async function () {
         // 1. Open the website
         await driver.get('http://68.233.110.246/bnrc_stg/home');
-        // Wait for the SweetAlert2 "OK" button to appear and click it
-        const okButton = await driver.wait(
-            until.elementLocated(By.css("button.swal2-confirm.btn.btn-danger")),
-            10000
-        );
-        await driver.wait(until.elementIsVisible(okButton), 5000);
-        await okButton.click();
+        // Dismiss startup SweetAlert if present; continue safely if not shown
+        try {
+            const popupLocators = [
+                By.css("button.swal2-confirm.btn.btn-danger"),
+                By.css("button.swal2-confirm"),
+                By.xpath("//button[contains(@class,'swal2-confirm') and normalize-space()='OK']"),
+                By.xpath("//button[contains(@class,'swal2-confirm')]")
+            ];
 
+            let alertHandled = false;
+            for (const locator of popupLocators) {
+                const buttons = await driver.findElements(locator);
+                if (buttons.length === 0) continue;
+
+                const okButton = buttons[0];
+                try {
+                    await driver.wait(until.elementIsVisible(okButton), 3000);
+                } catch (_) {
+                    // Continue with click attempt even if visibility wait is flaky
+                }
+
+                try {
+                    await okButton.click();
+                } catch (_) {
+                    await driver.executeScript("arguments[0].click();", okButton);
+                }
+
+                alertHandled = true;
+                console.log("Startup alert handled");
+                break;
+            }
+
+            if (!alertHandled) {
+                console.log("No startup alert found, continuing to menu navigation");
+            }
+        } catch (e) {
+            console.log("Startup alert handling skipped:", e.message);
+        }
+        await driver.sleep(500);
 
         // 2. Wait for the "E-Application" dropdown
         const eAppDropdown = await driver.wait(
@@ -98,33 +133,154 @@ describe('Transfer Registration Automation', function () {
         // Hover over the element to show the dropdown
         const actions = driver.actions({ bridge: true });
         await actions.move({ origin: eAppDropdown }).perform();
+        try {
+            await eAppDropdown.click();
+        } catch (_) {
+            await driver.executeScript("arguments[0].click();", eAppDropdown);
+        }
 
-        // 5. Wait for and click the "Certificate Verification" option
-        const certOption = await driver.wait(
-            until.elementLocated(By.css('a.dropdown-item[href="/bnrc_stg/Website/transferIntoBihar"]')),
+        // 3. Wait for and click the "Transfer (Moving into Bihar)" option
+        const transferOption = await driver.wait(
+            until.elementLocated(By.xpath("//a[contains(@class,'dropdown-item') and @href='/bnrc_stg/Website/transferIntoBihar' and contains(normalize-space(.),'Transfer (Moving into Bihar)')]")),
             10000
         );
-        await driver.wait(until.elementIsVisible(certOption), 5000);
-        await certOption.click();
+        await driver.wait(until.elementIsVisible(transferOption), 5000);
+        await transferOption.click();
 
-        // Helper to interact with fields safely and add 3s delay after each
+        const usedContactNumbers = new Set();
+
+        function generateUniqueOrganizationPhoneNumber() {
+            let number = '';
+            do {
+                const restDigits = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+                number = `0${restDigits}`;
+            } while (usedContactNumbers.has(number));
+
+            usedContactNumbers.add(number);
+            return number;
+        }
+
+        function generateUniqueMobileNumber() {
+            let number = '';
+            do {
+                const firstDigit = Math.floor(Math.random() * 4) + 6; // 6-9
+                const restDigits = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+                number = `${firstDigit}${restDigits}`;
+            } while (usedContactNumbers.has(number));
+
+            usedContactNumbers.add(number);
+            return number;
+        }
+
+        function generateUniqueEmail(prefix = 'test') {
+            const domain = '@gmail.com';
+            const maxTotalLength = 20;
+            const maxLocalLength = maxTotalLength - domain.length;
+
+            const cleanPrefix = (prefix || 'user').toLowerCase().replace(/[^a-z0-9]/g, '') || 'user';
+            const suffix = `${Date.now().toString(36)}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
+            const maxPrefixLen = Math.max(1, maxLocalLength - suffix.length);
+            const safePrefix = cleanPrefix.slice(0, maxPrefixLen);
+            const localPart = `${safePrefix}${suffix}`.slice(0, maxLocalLength);
+
+            return `${localPart}${domain}`;
+        }
+
+        // Helper to interact with fields safely and add retries
         async function fillField(selector, value) {
+            let retries = 3;
+            while (retries > 0) {
+                try {
+                    const elem = await driver.wait(until.elementLocated(By.css(selector)), 15000);
+                    await driver.wait(until.elementIsVisible(elem), 10000);
+                    await driver.wait(until.elementIsEnabled(elem), 10000);
+                    await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", elem);
+                    await elem.clear();
+                    await driver.sleep(300);
+                    await elem.sendKeys(value);
+                    await driver.sleep(1200);
+                    return;
+                } catch (e) {
+                    retries--;
+                    if (retries === 0) throw e;
+                    await driver.sleep(800);
+                }
+            }
+        }
+
+        async function setFieldValueWithoutJump(selector, value) {
+            await driver.executeScript(
+                `const elem = document.querySelector(arguments[0]);
+                 if (!elem) {
+                     throw new Error('Element not found: ' + arguments[0]);
+                 }
+                 const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+                 valueSetter.call(elem, arguments[1]);
+                 elem.dispatchEvent(new Event('input', { bubbles: true }));
+                 elem.dispatchEvent(new Event('change', { bubbles: true }));
+                 elem.blur();`,
+                selector,
+                value
+            );
+            await driver.sleep(500);
+        }
+
+        async function scrollToSelector(selector) {
             const elem = await driver.wait(until.elementLocated(By.css(selector)), 15000);
-            await driver.wait(until.elementIsVisible(elem), 10000);
-            await driver.wait(until.elementIsEnabled(elem), 10000);
             await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", elem);
-            await elem.clear();
-            await elem.sendKeys(value);
-            await driver.sleep(3000); // 3 seconds delay after filling field
+            await driver.sleep(500);
+            return elem;
+        }
+
+        async function slowScrollToSelector(selector) {
+            const elem = await driver.wait(until.elementLocated(By.css(selector)), 15000);
+            await driver.executeAsyncScript(
+                `const target = arguments[0];
+                 const done = arguments[arguments.length - 1];
+                 const startY = window.pageYOffset;
+                 const targetY = target.getBoundingClientRect().top + window.pageYOffset - (window.innerHeight * 0.45);
+                 const distance = targetY - startY;
+                 const duration = 1800;
+                 const startTime = performance.now();
+
+                 function easeInOutCubic(t) {
+                     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+                 }
+
+                 function step(now) {
+                     const elapsed = now - startTime;
+                     const progress = Math.min(elapsed / duration, 1);
+                     const eased = easeInOutCubic(progress);
+                     window.scrollTo(0, startY + distance * eased);
+                     if (progress < 1) {
+                         requestAnimationFrame(step);
+                     } else {
+                         done(true);
+                     }
+                 }
+
+                 requestAnimationFrame(step);`,
+                elem
+            );
+            await driver.sleep(250);
+            return elem;
         }
 
         async function selectDropdown(selector, value) {
             const elem = await driver.wait(until.elementLocated(By.css(selector)), 15000);
             await driver.wait(until.elementIsVisible(elem), 10000);
-            await driver.executeScript("arguments[0].scrollIntoView(true);", elem);
+            await driver.executeScript(
+                "arguments[0].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });",
+                elem
+            );
+            await driver.sleep(300);
 
             // Click the dropdown first to trigger loading
-            await elem.click();
+            try {
+                await elem.click();
+            } catch (e) {
+                await driver.executeScript("arguments[0].click();", elem);
+            }
 
             // Wait until at least 2 options exist (default + real one)
             await driver.wait(async () => {
@@ -179,11 +335,11 @@ describe('Transfer Registration Automation', function () {
         await dobInput.click();
 
         // Select year (example flow: open 2009, then click 2004)
-        const year2025 = await driver.wait(
-            until.elementLocated(By.xpath("//span[contains(text(),'2025')]")),
+        const year2026 = await driver.wait(
+            until.elementLocated(By.xpath("//span[contains(text(),'2026')]")),
             5000
         );
-        await year2025.click();
+        await year2026.click();
 
         let yearFound = false;
 
@@ -222,10 +378,14 @@ describe('Transfer Registration Automation', function () {
         await day14.click();
         await driver.sleep(1000);
 
-        await fillField("input[formcontrolname='emailId']", 'test' + Math.floor(Math.random() * 1000) + 'new@gmail.com');
+        const applicantEmail = generateUniqueEmail('transfer');
+        await scrollToSelector("input[formcontrolname='emailId']");
+        await fillField("input[formcontrolname='emailId']", applicantEmail);
+        console.log("Generated unique email:", applicantEmail);
+
         //await fillField("input[formcontrolname='mobNo']", '9276945550');
         await selectDropdown("select[formcontrolname='stateId']", 'Bihar');
-        await selectDropdown("select[formcontrolname='districtId']", 'GAYA');
+        await selectDropdown("select[formcontrolname='districtId']", 'GAYA JI');
         await selectDropdown("select[formcontrolname='casteCategory']", 'Unreserved (GEN/UR)');
         await fillField("input[formcontrolname='pinCode']", '800002');
         await fillField("textarea[formcontrolname='address']", 'Ashok Nagar, gaya');
@@ -300,7 +460,7 @@ describe('Transfer Registration Automation', function () {
         const biharOption = await driver.findElement(By.xpath("//option[text()='Bihar']"));
         await biharOption.click();*/
         const councilDropdown = await driver.findElement(By.css("select[formcontrolname='councilSate']"));
-        await councilDropdown.sendKeys("Bihar");
+        await councilDropdown.sendKeys("Assam");
 
 
         await fillField("input[formcontrolname='currentRegistrationCouncil']", '8885786353');
@@ -309,11 +469,11 @@ describe('Transfer Registration Automation', function () {
         await issueInput.click();
 
         // Select year (example flow: open 2009, then click 2004)
-        const Year2025 = await driver.wait(
-            until.elementLocated(By.xpath("//span[contains(text(),'2025')]")),
+        const Year2026 = await driver.wait(
+            until.elementLocated(By.xpath("//span[contains(text(),'2026')]")),
             5000
         );
-        await Year2025.click();
+        await Year2026.click();
 
         let yearfound = false;
 
@@ -384,17 +544,15 @@ describe('Transfer Registration Automation', function () {
 
         // List of file paths for 8 upload fields
         const filePaths = [
-            "C:\\Users\\Harsh\\Downloads\\Digital CV.pdf",
-            "C:\\Users\\Harsh\\Downloads\\Digital CV.pdf",
-            "C:\\Users\\Harsh\\Downloads\\Digital CV.pdf",
-            "C:\\Users\\Harsh\\Downloads\\Digital CV.pdf",
-            "C:\\Users\\Harsh\\Downloads\\Digital CV.pdf",
-            "C:\\Users\\Harsh\\Downloads\\Digital CV.pdf",
-            "C:\\Users\\Harsh\\Downloads\\Digital CV.pdf",
-            "C:\\Users\\Harsh\\Downloads\\Digital CV.pdf",
+            "C:\\Users\\Archita Verma\\OneDrive - PIRAMAL SWASTHYA MANAGEMENT AND RESEARCH INSTITUTE\\new-course\\bnrc-tests\\e2e\\Form-Automation\\Sample document.pdf",
+            "C:\\Users\\Archita Verma\\OneDrive - PIRAMAL SWASTHYA MANAGEMENT AND RESEARCH INSTITUTE\\new-course\\bnrc-tests\\e2e\\Form-Automation\\Sample document.pdf",
+            "C:\\Users\\Archita Verma\\OneDrive - PIRAMAL SWASTHYA MANAGEMENT AND RESEARCH INSTITUTE\\new-course\\bnrc-tests\\e2e\\Form-Automation\\Sample document.pdf",
+            "C:\\Users\\Archita Verma\\OneDrive - PIRAMAL SWASTHYA MANAGEMENT AND RESEARCH INSTITUTE\\new-course\\bnrc-tests\\e2e\\Form-Automation\\Sample document.pdf",
+            "C:\\Users\\Archita Verma\\OneDrive - PIRAMAL SWASTHYA MANAGEMENT AND RESEARCH INSTITUTE\\new-course\\bnrc-tests\\e2e\\Form-Automation\\Sample document.pdf",
+            "C:\\Users\\Archita Verma\\OneDrive - PIRAMAL SWASTHYA MANAGEMENT AND RESEARCH INSTITUTE\\new-course\\bnrc-tests\\e2e\\Form-Automation\\Sample document.pdf",
+            "C:\\Users\\Archita Verma\\OneDrive - PIRAMAL SWASTHYA MANAGEMENT AND RESEARCH INSTITUTE\\new-course\\bnrc-tests\\e2e\\Form-Automation\\Sample document.pdf",
+            "C:\\Users\\Archita Verma\\OneDrive - PIRAMAL SWASTHYA MANAGEMENT AND RESEARCH INSTITUTE\\new-course\\bnrc-tests\\e2e\\Form-Automation\\Sample document.pdf"
         ];
-
-        // Locate all file inputs (there should be 8)
         const uploadInputs = await driver.wait(
             until.elementsLocated(By.css("input[type='file'][accept='application/pdf']")),
             10000
@@ -414,21 +572,59 @@ describe('Transfer Registration Automation', function () {
             await driver.sleep(500);
             await uploadInputs[i].sendKeys(absPath);
             console.log(`Uploaded: ${absPath}`);
-            await driver.sleep(300);
-           // await driver.executeScript("window.scrollBy(0, 200);"); // scroll down 200px
+            await driver.sleep(400);
 
 }
             //console.log("File uploaded successfully.");
+           await slowScrollToSelector("input[type='radio'][formcontrolname='incCompliant'][value='2']");
            const radioButton = await driver.findElement(By.css("input[type='radio'][formcontrolname='incCompliant'][value='2']"));
            await radioButton.click();
-           await fillField("input[formcontrolname='organizationPhoneNo']", '0885786353');
-           await fillField("input[formcontrolname='organizationEmailId']", 'jdfhjdf@gmail.com');
-           await fillField("input[formcontrolname='mobNo']", '9276945553');
+           const uniqueOrganizationPhoneNumber = generateUniqueOrganizationPhoneNumber();
+           await slowScrollToSelector("input[formcontrolname='organizationPhoneNo']");
+           await fillField("input[formcontrolname='organizationPhoneNo']", uniqueOrganizationPhoneNumber);
+           console.log("Generated organization phone number:", uniqueOrganizationPhoneNumber);
+           const organizationEmail = generateUniqueEmail('org');
+           await slowScrollToSelector("input[formcontrolname='organizationEmailId']");
+           await fillField("input[formcontrolname='organizationEmailId']", organizationEmail);
+
+           const uniqueAuthorizedMobileNumber = generateUniqueMobileNumber();
+           await slowScrollToSelector("input[formcontrolname='mobNo']");
+           await setFieldValueWithoutJump("input[formcontrolname='mobNo']", uniqueAuthorizedMobileNumber);
+           console.log("Generated authorized person mobile number:", uniqueAuthorizedMobileNumber);
            const mobInput = await driver.findElement(By.css("input[formcontrolname='mobNo']"));
            await mobInput.sendKeys(Key.TAB); // moves focus out
            const sendOtpButton = await driver.wait(
                 until.elementLocated(By.xpath("//button[contains(text(),'Send OTP')]")),
                 10000
+            );
+
+            await driver.executeAsyncScript(
+                `const target = arguments[0];
+                 const done = arguments[arguments.length - 1];
+                 const startY = window.pageYOffset;
+                 const targetY = target.getBoundingClientRect().top + window.pageYOffset - (window.innerHeight * 0.45);
+                 const distance = targetY - startY;
+                 const duration = 1800;
+                 const startTime = performance.now();
+
+                 function easeInOutCubic(t) {
+                     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+                 }
+
+                 function step(now) {
+                     const elapsed = now - startTime;
+                     const progress = Math.min(elapsed / duration, 1);
+                     const eased = easeInOutCubic(progress);
+                     window.scrollTo(0, startY + distance * eased);
+                     if (progress < 1) {
+                         requestAnimationFrame(step);
+                     } else {
+                         done(true);
+                     }
+                 }
+
+                 requestAnimationFrame(step);`,
+                sendOtpButton
             );
 
             
@@ -448,22 +644,24 @@ describe('Transfer Registration Automation', function () {
 
            // Wait for the first "OK" button after sending OTP and click it
            const okButtonAfterSend = await driver.wait(
-                until.elementLocated(By.xpath("//button[text()='OK']")),
+                until.elementLocated(By.xpath("//button[contains(@class,'swal2-confirm') and normalize-space()='OK']")),
                 10000
             );
            await driver.wait(until.elementIsVisible(okButtonAfterSend), 5000);
-           await okButtonAfterSend.click();
+           try {
+               await okButtonAfterSend.click();
+           } catch (e) {
+               await driver.executeScript("arguments[0].click();", okButtonAfterSend);
+           }
 
            // Wait for the OTP input field to be visible and enter a placeholder OTP
            const otpInput = await driver.wait(
                 until.elementLocated(By.css("input[formcontrolname='otp']")),
                 10000
            );
-           await driver.wait(async () => {
-                const value = await otpInput.getAttribute("value");
-                return value && value.trim().length > 0; // ensure OTP is filled
-            }, 10000);
-           //await otpInput.sendKeys("123456"); // Placeholder OTP, replace if needed
+         await driver.wait(until.elementIsVisible(otpInput), 5000);
+         await otpInput.clear();
+         await otpInput.sendKeys("123456");
 
            // Wait for the "Verify OTP" button to be clickable and click it
            const verifyOtpButton = await driver.wait(
@@ -475,29 +673,56 @@ describe('Transfer Registration Automation', function () {
 
            // Wait for the second "OK" button after verifying OTP and click it
            const okButtonAfterVerify = await driver.wait(
-                until.elementLocated(By.xpath("//button[text()='OK']")),
+                until.elementLocated(By.xpath("//button[contains(@class,'swal2-confirm') and normalize-space()='OK']")),
                 10000
             );
            await driver.wait(until.elementIsVisible(okButtonAfterVerify), 5000);
-           await okButtonAfterVerify.click();
+           try {
+               await okButtonAfterVerify.click();
+           } catch (e) {
+               await driver.executeScript("arguments[0].click();", okButtonAfterVerify);
+           }
 
        
+        await slowScrollToSelector("input[formcontrolname='captcha']");
         await fillField("input[formcontrolname='captcha']", '1');
 
-        // Agree to Aadhaar checkbox (click the actual checkbox, not label)
-        const aadhaarCheckboxInput = await driver.findElement(By.css("input[type='checkbox'][id='flexCheckDefault']"));
+        // Agree declaration checkbox
+        await slowScrollToSelector("input[type='checkbox']#flexCheckDefault");
+        const agreementCheckbox = await driver.wait(
+            until.elementLocated(By.css("input[type='checkbox']#flexCheckDefault")),
+            10000
+        );
+        await driver.executeScript(
+            "arguments[0].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });",
+            agreementCheckbox
+        );
+        await driver.wait(until.elementIsVisible(agreementCheckbox), 5000);
 
-        // Scroll into view
-        await driver.executeScript("arguments[0].scrollIntoView(true);", aadhaarCheckboxInput);
-
-        // Click only if not already selected
-        if (!(await aadhaarCheckboxInput.isSelected())) {
-            await aadhaarCheckboxInput.click();
+        if (!(await agreementCheckbox.isSelected())) {
+            try {
+                await agreementCheckbox.click();
+            } catch (e) {
+                try {
+                    const agreementLabel = await driver.findElement(By.css("label[for='flexCheckDefault']"));
+                    await driver.executeScript(
+                        "arguments[0].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });",
+                        agreementLabel
+                    );
+                    await agreementLabel.click();
+                } catch (_) {
+                    await driver.executeScript(
+                        "arguments[0].checked = true; arguments[0].dispatchEvent(new Event('change', { bubbles: true }));",
+                        agreementCheckbox
+                    );
+                }
+            }
         }
         await driver.sleep(3000);
 
         // 5. Submit the form
 
+        await slowScrollToSelector("button[type='submit'].btn-success");
         const submitBtn = await driver.wait(
             until.elementLocated(By.css("button[type='submit'].btn-success")),
             10000
@@ -544,6 +769,17 @@ try {
 
     if (tempIdMatch) {
         tempId = tempIdMatch[0];  // whole match, e.g., TEMP12345
+
+        const { existsSync, mkdirSync, writeFileSync } = require('fs');
+        const screenshotDir = path.resolve(__dirname, '../../BNRCscreenshots');
+        if (!existsSync(screenshotDir)) {
+            mkdirSync(screenshotDir, { recursive: true });
+        }
+
+        const screenshotPath = path.join(screenshotDir, `transfer-temp-id-${tempId}.png`);
+        const image = await driver.takeScreenshot();
+        writeFileSync(screenshotPath, image, 'base64');
+        console.log("Saved TEMP ID screenshot:", screenshotPath);
     }
     //tempId = tempIdMatch ? tempIdMatch[0].replace(/\s+/g, "") : "Not found";
     console.log(" Form submitted successfully. TEMP ID:", tempId);
@@ -560,9 +796,6 @@ try {
     );
     await driver.wait(until.elementIsVisible(okBtn), 5000);
     await driver.sleep(5000);
-    await driver.takeScreenshot().then(function(image) {
-        require('fs').writeFileSync('C:\\Users\\Harsh\\Downloads\\new-course\\bnrc-tests\\BNRCscreenshots\\transfer_registration_success.png', image, 'base64');
-    });
 
     await driver.executeScript("arguments[0].click();", okBtn);
     console.log("Clicked 'OK' to close popup.");

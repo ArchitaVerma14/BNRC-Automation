@@ -2,6 +2,7 @@
   "name": "bnrc-tests",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "mocha test/e-applications/foreign.js --reporter spec",
     "test:foreign_copy": "mocha test/e-applications/foreign_copy.js --reporter spec",

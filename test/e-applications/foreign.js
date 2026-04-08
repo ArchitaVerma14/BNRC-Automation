@@ -1,408 +1,223 @@
-const { Builder, By, until, Key } = require('selenium-webdriver');
-const chrome = require('selenium-webdriver/chrome');
-const path = require('path');
-const fs = require('fs');
-const { Select } = require('selenium-webdriver/lib/select');
-const chromedriver = require('chromedriver');
-const verhoeff = require('verhoeff');
-const { faker } = require('@faker-js/faker');
+import { test, expect } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { generate } from 'verhoeff';
+import { faker } from '@faker-js/faker';
 
-describe('Foreign Verification Automation', function () {
-    this.timeout(90000); // Increase timeout for browser actions
-    let driver;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-    function generateUniqueMobileNumber() {
-        const firstDigit = Math.floor(Math.random() * 4) + 6; // 6-9
-        const restDigits = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
-        return firstDigit + restDigits;
+function generateUniqueMobileNumber() {
+  const firstDigit = Math.floor(Math.random() * 4) + 6;
+  const restDigits = Math.floor(Math.random() * 1000000000)
+    .toString()
+    .padStart(9, '0');
+  return `${firstDigit}${restDigits}`;
+}
+
+function generateValidAadhaarNumber() {
+  const firstDigit = Math.floor(Math.random() * 6) + 4;
+  let remainingDigits = '';
+  for (let i = 0; i < 10; i += 1) {
+    remainingDigits += Math.floor(Math.random() * 10);
+  }
+  const baseNumber = `${firstDigit}${remainingDigits}`;
+  const checkDigit = generate(baseNumber);
+  return `${baseNumber}${checkDigit}`;
+}
+
+function generateUniqueName() {
+  const firstNameRaw = faker.person.firstName();
+  const lastNameRaw = faker.person.lastName();
+  const firstName = firstNameRaw.replace(/[^A-Za-z]/g, '') || 'Test';
+  const lastName = lastNameRaw.replace(/[^A-Za-z]/g, '') || 'User';
+  const suffix = faker.string.alpha({ length: 3, casing: 'upper' });
+  return `${firstName} ${lastName} ${suffix}`;
+}
+
+function generateUniqueEmail(fullName) {
+  const domain = '@gmail.com';
+  const maxTotalLength = 30;
+  const maxLocalLength = maxTotalLength - domain.length;
+
+  const cleanBase = (fullName || 'user').toLowerCase().replace(/[^a-z]/g, '') || 'user';
+  const suffix = `${Date.now().toString(36)}${Math.floor(Math.random() * 100)
+    .toString()
+    .padStart(2, '0')}`;
+  const maxBaseLength = Math.max(1, maxLocalLength - suffix.length);
+  const basePart = cleanBase.slice(0, maxBaseLength);
+  const localPart = `${basePart}${suffix}`.slice(0, maxLocalLength);
+
+  return `${localPart}${domain}`;
+}
+
+async function fillField(locator, value) {
+  await locator.scrollIntoViewIfNeeded();
+  await locator.fill(String(value));
+}
+
+async function selectByVisibleLabel(page, selector, label) {
+  const dropdown = page.locator(selector);
+  await dropdown.scrollIntoViewIfNeeded();
+  await dropdown.selectOption({ label });
+}
+
+test.describe('Foreign Verification Automation', () => {
+  test('should register a foreign verification with sample data', async ({ page }) => {
+    test.setTimeout(120000);
+
+    await page.goto('http://68.233.110.246/bnrc_stg/home', { waitUntil: 'domcontentloaded' });
+
+    const startupOk = page.locator("button.swal2-confirm, button:has-text('OK')").first();
+    if (await startupOk.isVisible().catch(() => false)) {
+      await startupOk.click({ force: true });
     }
 
-    function generateValidAadhaarNumber() {
-        const firstDigit = Math.floor(Math.random() * 6) + 4; // 4-9
-        let remainingDigits = '';
-        for (let i = 0; i < 10; i++) {
-            remainingDigits += Math.floor(Math.random() * 10);
-        }
-        const baseNumber = firstDigit + remainingDigits;
-        const checkDigit = verhoeff.generate(baseNumber);
-        return baseNumber + checkDigit;
-    }
-
-    function generateUniqueName() {
-        const firstNameRaw = faker.person.firstName();
-        const lastNameRaw = faker.person.lastName();
-
-        const firstName = firstNameRaw.replace(/[^A-Za-z]/g, '') || 'Test';
-        const lastName = lastNameRaw.replace(/[^A-Za-z]/g, '') || 'User';
-        const suffix = faker.string.alpha({ length: 3, casing: 'upper' });
-
-        return `${firstName} ${lastName} ${suffix}`;
-    }
-
-    function generateUniqueEmail(fullName) {
-        const domain = '@gmail.com';
-        const maxTotalLength = 30;
-        const maxLocalLength = maxTotalLength - domain.length;
-
-        const cleanBase = fullName.toLowerCase().replace(/[^a-z]/g, '') || 'user';
-        const suffix = `${Date.now().toString(36)}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
-        const maxBaseLength = Math.max(1, maxLocalLength - suffix.length);
-        const basePart = cleanBase.slice(0, maxBaseLength);
-        const localPart = `${basePart}${suffix}`.slice(0, maxLocalLength);
-
-        return `${localPart}${domain}`;
-    }
-
-    before(async function () {
-        try {
-            const options = new chrome.Options();
-            options.addArguments('--ignore-certificate-errors');
-            options.addArguments('--disable-web-security');
-            options.addArguments('--start-maximized');
-            options.addArguments('--headless=new');
-            options.addArguments('--no-sandbox');
-            options.addArguments('--disable-dev-shm-usage');
-            options.addArguments('--allow-running-insecure-content');
-            // options.addArguments('--headless'); // Uncomment to run in headless mode
-
-            const service = new chrome.ServiceBuilder(chromedriver.path);
-
-            driver = await new Builder()
-                .forBrowser('chrome')
-                .setChromeOptions(options)
-                .setChromeService(service)
-                .build();
-        } catch (err) {
-            console.error('Error in before hook:', err);
-            throw err;
-        }
-    });
-
-    after(async function () {
-        if (driver) await driver.quit();
-    });
-
-    it('should register a foreign verification with sample data', async function () {
-        // 1. Open the website
-        await driver.get('http://68.233.110.246/bnrc_stg/home');
-
-        // 2. Wait for the "E-Application" dropdown
-        const eAppDropdown = await driver.wait(
-            until.elementLocated(By.xpath("//a[contains(text(),'E-Application')]")),
-            10000
-        );
-        await driver.wait(until.elementIsVisible(eAppDropdown), 5000);
-
-        // Hover over the element to show the dropdown
-        const actions = driver.actions({ bridge: true });
-        await actions.move({ origin: eAppDropdown }).perform();
-
-        // 5. Wait for and click the "Foreign Verification" option
-        const certOption = await driver.wait(
-            until.elementLocated(By.css('a.dropdown-item[href="/bnrc_stg/Website/foreign-verification"]')),
-            10000
-        );
-        await driver.wait(until.elementIsVisible(certOption), 5000);
-        await certOption.click();
-
-        // Helper to interact with fields safely and add 3s delay after each
-        async function fillField(selector, value) {
-            const elem = await driver.wait(until.elementLocated(By.css(selector)), 15000);
-            await driver.wait(until.elementIsVisible(elem), 10000);
-            await driver.wait(until.elementIsEnabled(elem), 10000);
-            await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", elem);
-            await elem.clear();
-            await elem.sendKeys(value);
-            await driver.sleep(3000); // 3 seconds delay after filling field
-        }
-
-        async function selectDropdown(selector, value) {
-            const elem = await driver.wait(until.elementLocated(By.css(selector)), 15000);
-            await driver.wait(until.elementIsVisible(elem), 10000);
-            await driver.executeScript("arguments[0].scrollIntoView(true);", elem);
-
-            // Click the dropdown first to trigger loading
-            await elem.click();
-
-            // Wait until at least 2 options exist (default + real one)
-            await driver.wait(async () => {
-                const options = await elem.findElements(By.css("option"));
-                return options.length > 1;
-            }, 10000, "Dropdown options did not load");
-
-            // Now select
-            const options = await elem.findElements(By.css("option"));
-            let available = [];
-            for (let opt of options) {
-                const text = (await opt.getText()).trim();
-
-                // normalize curly vs straight apostrophe for comparison
-                const normalizedText = text.replace(/’/g, "'").trim();
-                const normalizedValue = value.replace(/’/g, "'").trim();
-
-                available.push(text);
-                if (normalizedText === normalizedValue) {
-                    await opt.click();
-                    return;
-                }
-            }
-            throw new Error(`Option "${value}" not found in dropdown ${selector}. Available: ${available.join(", ")}`);
-        }
-
-
-        // 4. Fill out the registration form with random data
-      //  await fillField("input[formcontrolname='registrationNumber']", 'REG' + Math.floor(Math.random() * 100000));
-         const courseDropdown = await driver.wait(
-        until.elementLocated(By.css('select[formcontrolname="courseId"]')),
-        10000
-        );
-        await driver.wait(until.elementIsVisible(courseDropdown), 5000);
-
-        // Click the dropdown (optional)
-        await courseDropdown.click();
-
-        // Select "ANM" option by value
-        const anmOption = await driver.findElement(By.css('select[formcontrolname="courseId"] option[value="2"]'));
-        await anmOption.click();      
-
-        const uniqueApplicantName = generateUniqueName();
-        const uniqueFatherName = generateUniqueName();
-        const uniqueEmail = generateUniqueEmail(uniqueApplicantName);
-        const uniqueMobile = generateUniqueMobileNumber();
-        const uniqueAadhaar = generateValidAadhaarNumber();
-
-        await fillField("input[formcontrolname='applicantName']", uniqueApplicantName);
-        await selectDropdown("select[formcontrolname='genderId']", 'Male');
-        await fillField("input[formcontrolname='fatherName']", uniqueFatherName);
-        //await fillField("input[formcontrolname='dob']", '1990-01-01');
-        // Open DOB date picker
-    const dobInput = await driver.findElement(By.css("input[formcontrolname='dob']"));
-        await dobInput.click();
-
-        // Select year (example flow: open 2009, then click 2004)
-        const year2025 = await driver.wait(
-            until.elementLocated(By.xpath("//span[contains(text(),'2010')]")),
-            5000
-        );
-        await year2025.click();
-
-        let yearFound = false;
-
-        while (!yearFound) {
-             const years = await driver.findElements(By.xpath("//span[text()='2002']"));
-            if (years.length > 0) {
-                await driver.executeScript("arguments[0].click();", years[0]);  // Click 2003 directly
-                yearFound = true;
-            } else {
-                const prevButton = await driver.findElement(By.css("button.previous"));
-                await prevButton.click();
-                await driver.sleep(500);  // small delay so DOM updates
-            }
-        }
-
-       // const year2003 = await driver.wait(
-         //   until.elementLocated(By.xpath("//span[contains(text(),'2003')]")),
-           // 5000
-        
-      //  await year2003.click();
-        //await driver.sleep(3000);
-
-        // Select month (example: June)
-        const monthJune = await driver.wait(
-            until.elementLocated(By.xpath("//span[text()='June']")),
-            5000
-        );
-        await monthJune.click();
-        await driver.sleep(3000);
-
-        // Select day (example: 14)
-        const day14 = await driver.wait(
-            until.elementLocated(By.xpath("//span[text()='14']")),
-            5000
-        );
-        await day14.click();
-        await driver.sleep(1000);
-
-        await fillField("input[formcontrolname='email']", uniqueEmail);
-        await fillField("input[formcontrolname='mobNo']", uniqueMobile);
-        await selectDropdown("select[formcontrolname='stateId']", 'Bihar');
-        await selectDropdown("select[formcontrolname='districtId']", 'GAYA JI');
-        await selectDropdown("select[formcontrolname='categoryId']", 'Unreserved (GEN/UR)');
-        await fillField("input[formcontrolname='aadhaarName']", uniqueApplicantName);
-        // Click the Birth Year input field (using placeholder 'YYYY')
-        // Click Birth Year field
-        await driver.findElement(By.xpath("//input[@placeholder='YYYY']")).click();
-
-        let yearSelected = false;
-
-        while (!yearSelected) {
-            // Try to locate the year 2003 in the currently visible grid
-            const years = await driver.findElements(By.xpath("//span[text()='2002']"));
-            
-            if (years.length > 0) {
-                // Year 2003 found, click it
-                await driver.executeScript("arguments[0].click();", years[0]);
-                yearSelected = true; // ✅ set the flag
-                console.log("Year 2002 selected.");
-            } else {
-                // Year 2002 not found, click the previous button
-                const prevButtons = await driver.findElements(By.css("button.previous"));
-
-                if (prevButtons.length > 0) {
-                    // Use executeScript to ensure click works
-                    await driver.executeScript("arguments[0].click();", prevButtons[0]);
-                    await driver.sleep(500); // wait for DOM to update
-                } else {
-                    throw new Error("Previous button not found. Cannot navigate calendar.");
-                }
-            }
-        }
-        await fillField("input[formcontrolname='aadharNumber']", uniqueAadhaar);
-        
-        await selectDropdown("select[formcontrolname='educationId']", 'Matriculation');
-
-        // 3️⃣ Select Year 2020
-        const yearInput = await driver.findElement(By.css("input[formcontrolname='passedYear']"));
-        await yearInput.click();
-
-        let year2020 = false;
-        while (!year2020) {
-            const yearElems = await driver.findElements(By.xpath("//span[text()='2020']"));
-            if (yearElems.length > 0) {
-                await driver.executeScript("arguments[0].click();", yearElems[0]);
-                year2020 = true;
-            } else {
-                const prevButton = await driver.findElement(By.css("button.previous"));
-                await prevButton.click();
-                await driver.sleep(500); // wait for DOM update
-            }
-        }
-
-        // 4️ Enter 'CBSE' as Board Name
-        const boardInput = await driver.findElement(By.css("input[formcontrolname='boardName']"));
-        await boardInput.clear();
-        await boardInput.sendKeys("CBSE");
-
-        // 5️ Enter Secured Marks '90'
-        const marksInput = await driver.findElement(By.css("input[formcontrolname='securedMarks']"));
-        await marksInput.clear();
-        await marksInput.sendKeys("90");
-        //document
-        const path = require('path');
-
-            // Locate the file input using id
-            const uploadInput = await driver.wait(
-                until.elementLocated(By.css('input#degreeCertificateDoc[type="file"]')),
-                10000
-            );
-            await driver.wait(until.elementIsVisible(uploadInput), 5000);
-
-            // Make sure input is visible (in case hidden by CSS)
-            await driver.executeScript("arguments[0].style.display='block';", uploadInput);
-
-            // Full path to your PDF file
-            const certificatePath = path.resolve("C:\\Users\\Archita Verma\\OneDrive - PIRAMAL SWASTHYA MANAGEMENT AND RESEARCH INSTITUTE\\Sample document.pdf");
-
-            // Upload the file
-            await uploadInput.sendKeys(certificatePath);
-            //console.log("File uploaded successfully.");
-
-       
-        await fillField("input[formcontrolname='captcha']", '1');
-
-        // Move viewport slightly down so checkbox and submit area are easy to interact with
-        await driver.executeScript("window.scrollBy(0, 280);");
-        await driver.sleep(800);
-
-        // Agree to Aadhaar checkbox (click the actual checkbox, not label)
-        const aadhaarCheckboxInput = await driver.findElement(By.css("input[type='checkbox'][id='flexCheckDefault']"));
-        await driver.executeScript("arguments[0].scrollIntoView(true);", aadhaarCheckboxInput);
-        if (!(await aadhaarCheckboxInput.isSelected())) {
-            await aadhaarCheckboxInput.click();
-        }
-        await driver.sleep(3000);
-
-        // 5. Submit the form
-
-        const submitBtn = await driver.wait(
-            until.elementLocated(By.css("button[type='submit'].btn-success")),
-            10000
-        );
-        await driver.wait(until.elementIsVisible(submitBtn), 5000);
-        await driver.wait(until.elementIsEnabled(submitBtn), 5000);
-        await driver.executeScript("arguments[0].scrollIntoView(true);", submitBtn);
-
-        console.log("Clicking submit button...");
-        await submitBtn.click();
-
-       // First SweetAlert confirmation: "Yes, save it!"
-    let yesBtn;
+    const eApplication = page.locator("a.nav-link.dropdown-toggle:has-text('E-Application')").first();
+    await eApplication.scrollIntoViewIfNeeded();
+    await eApplication.hover();
     try {
-        yesBtn = await driver.wait(
-            until.elementLocated(By.xpath("//button[contains(text(),'Yes, save it!')]")), // match exact case
-            10000
-        );
-        await driver.wait(until.elementIsVisible(yesBtn), 5000);
-
-        // Click using JS to avoid element overlay issues
-        await driver.executeScript("arguments[0].click();", yesBtn);
-        console.log("Clicked 'Yes, save it!'");
-    } catch (e) {
-        console.error("'Yes, save it!' button not found:", e);
+      await eApplication.click();
+    } catch {
+      await eApplication.click({ force: true });
     }
-    await driver.sleep(7000); 
-// Wait for success message and extract TEMP ID
-let tempId = "Not found";
-try {
-    const swalContainer = await driver.wait(
-        until.elementLocated(By.css("div.swal2-html-container")),
-        10000
-    );
-    await driver.wait(async () => {
-        const text = await swalContainer.getText();
-        return /TEMP\d+/.test(text);
-    }, 5000, "TEMP ID not found in popup");
 
-    const swalText = await swalContainer.getText();
-    //console.log("Popup text:", swalText);
+    await page.locator("a.dropdown-item[href='/bnrc_stg/Website/foreign-verification']").first().click();
 
-    const tempIdMatch = swalText.match(/TEMP\d+/);  
+    await page.locator("select[formcontrolname='courseId']").selectOption('2');
 
-    if (tempIdMatch) {
-        tempId = tempIdMatch[0];  // whole match, e.g., TEMP12345
+    const uniqueApplicantName = generateUniqueName();
+    const uniqueFatherName = generateUniqueName();
+    const uniqueEmail = generateUniqueEmail(uniqueApplicantName);
+    const uniqueMobile = generateUniqueMobileNumber();
+    const uniqueAadhaar = generateValidAadhaarNumber();
+
+    await fillField(page.locator("input[formcontrolname='applicantName']"), uniqueApplicantName);
+    await selectByVisibleLabel(page, "select[formcontrolname='genderId']", 'Male');
+    await fillField(page.locator("input[formcontrolname='fatherName']"), uniqueFatherName);
+
+    const dobInput = page.locator("input[formcontrolname='dob']");
+    await dobInput.scrollIntoViewIfNeeded();
+    await page.evaluate((selector) => {
+      const el = document.querySelector(selector);
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const targetTop = rect.top + window.pageYOffset - 220;
+      window.scrollTo({ top: Math.max(0, targetTop), behavior: 'auto' });
+    }, "input[formcontrolname='dob']");
+
+    const yearHeader = page.locator("button.current span", { hasText: '2010' }).first();
+    let dobOpened = false;
+    for (let attempt = 0; attempt < 4 && !dobOpened; attempt += 1) {
+      try {
+        await dobInput.click();
+      } catch {
+        await page.evaluate((selector) => {
+          const el = document.querySelector(selector);
+          if (el) el.click();
+        }, "input[formcontrolname='dob']");
+      }
+
+      if (await yearHeader.isVisible().catch(() => false)) {
+        dobOpened = true;
+      }
     }
+    await page.waitForTimeout(600);
+
+    await expect(yearHeader).toBeVisible();
+    await yearHeader.click();
+    await page.waitForTimeout(600);
+
+    let dobYearSelected = false;
+    for (let attempt = 0; attempt < 6 && !dobYearSelected; attempt += 1) {
+      const year2002 = page.locator("xpath=//span[text()='2002']").first();
+      if (await year2002.isVisible().catch(() => false)) {
+        await page.waitForTimeout(600);
+        await year2002.click();
+        dobYearSelected = true;
+      } else {
+        await page.locator('button.previous').first().click();
+        await page.waitForTimeout(450);
+      }
+    }
+
+    await page.locator("xpath=//span[text()='June']").first().click();
+    await page.locator("xpath=//span[text()='14']").first().click();
+
+    await fillField(page.locator("input[formcontrolname='email']"), uniqueEmail);
+    await fillField(page.locator("input[formcontrolname='mobNo']"), uniqueMobile);
+
+    await selectByVisibleLabel(page, "select[formcontrolname='stateId']", 'Bihar');
+    await selectByVisibleLabel(page, "select[formcontrolname='districtId']", 'GAYA JI');
+    await selectByVisibleLabel(page, "select[formcontrolname='categoryId']", 'Unreserved (GEN/UR)');
+
+    await fillField(page.locator("input[formcontrolname='aadhaarName']"), uniqueApplicantName);
+
+    await page.locator("input[placeholder='YYYY']").first().click();
+    let aadhaarYearSelected = false;
+    for (let attempt = 0; attempt < 6 && !aadhaarYearSelected; attempt += 1) {
+      const year2002 = page.locator("xpath=//span[text()='2002']").first();
+      if (await year2002.isVisible().catch(() => false)) {
+        await page.waitForTimeout(600);
+        await year2002.click();
+        aadhaarYearSelected = true;
+      } else {
+        await page.locator('button.previous').first().click();
+        await page.waitForTimeout(450);
+      }
+    }
+
+    await fillField(page.locator("input[formcontrolname='aadharNumber']"), uniqueAadhaar);
+    await selectByVisibleLabel(page, "select[formcontrolname='educationId']", 'Matriculation');
+
+    await page.locator("input[formcontrolname='passedYear']").click();
+    let passedYearSelected = false;
+    for (let attempt = 0; attempt < 8 && !passedYearSelected; attempt += 1) {
+      const year2020 = page.locator("xpath=//span[text()='2020']").first();
+      if (await year2020.isVisible().catch(() => false)) {
+        await year2020.click();
+        passedYearSelected = true;
+      } else {
+        await page.locator('button.previous').first().click();
+        await page.waitForTimeout(450);
+      }
+    }
+
+    await fillField(page.locator("input[formcontrolname='boardName']"), 'CBSE');
+    await fillField(page.locator("input[formcontrolname='securedMarks']"), '90');
+
+    const degreeCertificateInput = page.locator("input#degreeCertificateDoc[type='file']");
+    const certificatePath = path.resolve('./Sample document.pdf');
+    await degreeCertificateInput.setInputFiles(certificatePath);
+
+    await fillField(page.locator("input[formcontrolname='captcha']"), '1');
+
+    const declarationCheckbox = page.locator("input[type='checkbox']#flexCheckDefault");
+    await declarationCheckbox.scrollIntoViewIfNeeded();
+    await declarationCheckbox.check();
+
+    await page.locator("button[type='submit'].btn-success").click();
+
+    const yesButton = page.getByRole('button', { name: /Yes, save it!/i }).first();
+    await yesButton.click();
+
+    const swalContainer = page.locator('div.swal2-html-container').first();
+    await expect(swalContainer).toContainText(/TEMP\d+/);
+
+    const swalText = await swalContainer.innerText();
+    const tempIdMatch = swalText.match(/TEMP\d+/);
+    const tempId = tempIdMatch ? tempIdMatch[0] : 'Not-found';
 
     const screenshotDir = path.resolve(__dirname, '../../BNRCscreenshots');
     if (!fs.existsSync(screenshotDir)) {
-        fs.mkdirSync(screenshotDir, { recursive: true });
+      fs.mkdirSync(screenshotDir, { recursive: true });
     }
+
     const tempIdScreenshotPath = path.join(screenshotDir, `foreign-temp-id-${tempId}.png`);
-    await driver.takeScreenshot().then((image) => fs.writeFileSync(tempIdScreenshotPath, image, 'base64'));
-    console.log('Saved TEMP ID screenshot to:', tempIdScreenshotPath);
+    await page.screenshot({ path: tempIdScreenshotPath, fullPage: true });
 
-    //tempId = tempIdMatch ? tempIdMatch[0].replace(/\s+/g, "") : "Not found";
-    console.log(" Form submitted successfully. TEMP ID:", tempId);
-} catch (e) {
-    console.error("No TEMP ID popup found:", e);
-}
-
-// Final SweetAlert "OK" button
-let okBtn;
-try {
-    okBtn = await driver.wait(
-        until.elementLocated(By.xpath("//button[contains(text(),'OK')]")),
-        10000
-    );
-    await driver.wait(until.elementIsVisible(okBtn), 5000);
-    await driver.sleep(5000);
-    await driver.executeScript("arguments[0].click();", okBtn);
-    console.log("Clicked 'OK' to close popup.");
-} catch (e) {
-    console.error("'OK' button not found:", e);
-}
-
-await driver.sleep(3000); // Let popup close before continuing
-
-// You can now reuse `tempId` later if needed
-    });
-});    
+    const okButton = page.getByRole('button', { name: /^OK$/i }).first();
+    await okButton.click();
+  });
+});

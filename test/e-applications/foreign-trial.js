@@ -1,12 +1,57 @@
 const { Builder, By, until, Key } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const path = require('path');
+const fs = require('fs');
 const { Select } = require('selenium-webdriver/lib/select');
 const chromedriver = require('chromedriver');
+const verhoeff = require('verhoeff');
+const { faker } = require('@faker-js/faker');
 
 describe('Foreign Verification Automation', function () {
     this.timeout(90000); // Increase timeout for browser actions
     let driver;
+
+    function generateUniqueMobileNumber() {
+        const firstDigit = Math.floor(Math.random() * 4) + 6; // 6-9
+        const restDigits = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+        return firstDigit + restDigits;
+    }
+
+    function generateValidAadhaarNumber() {
+        const firstDigit = Math.floor(Math.random() * 6) + 4; // 4-9
+        let remainingDigits = '';
+        for (let i = 0; i < 10; i++) {
+            remainingDigits += Math.floor(Math.random() * 10);
+        }
+        const baseNumber = firstDigit + remainingDigits;
+        const checkDigit = verhoeff.generate(baseNumber);
+        return baseNumber + checkDigit;
+    }
+
+    function generateUniqueName() {
+        const firstNameRaw = faker.person.firstName();
+        const lastNameRaw = faker.person.lastName();
+
+        const firstName = firstNameRaw.replace(/[^A-Za-z]/g, '') || 'Test';
+        const lastName = lastNameRaw.replace(/[^A-Za-z]/g, '') || 'User';
+        const suffix = faker.string.alpha({ length: 3, casing: 'upper' });
+
+        return `${firstName} ${lastName} ${suffix}`;
+    }
+
+    function generateUniqueEmail(fullName) {
+        const domain = '@gmail.com';
+        const maxTotalLength = 30;
+        const maxLocalLength = maxTotalLength - domain.length;
+
+        const cleanBase = fullName.toLowerCase().replace(/[^a-z]/g, '') || 'user';
+        const suffix = `${Date.now().toString(36)}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
+        const maxBaseLength = Math.max(1, maxLocalLength - suffix.length);
+        const basePart = cleanBase.slice(0, maxBaseLength);
+        const localPart = `${basePart}${suffix}`.slice(0, maxLocalLength);
+
+        return `${localPart}${domain}`;
+    }
 
     before(async function () {
         try {
@@ -14,6 +59,9 @@ describe('Foreign Verification Automation', function () {
             options.addArguments('--ignore-certificate-errors');
             options.addArguments('--disable-web-security');
             options.addArguments('--start-maximized');
+            options.addArguments('--headless=new');
+            options.addArguments('--no-sandbox');
+            options.addArguments('--disable-dev-shm-usage');
             options.addArguments('--allow-running-insecure-content');
             // options.addArguments('--headless'); // Uncomment to run in headless mode
 
@@ -117,9 +165,15 @@ describe('Foreign Verification Automation', function () {
         const anmOption = await driver.findElement(By.css('select[formcontrolname="courseId"] option[value="2"]'));
         await anmOption.click();      
 
-        await fillField("input[formcontrolname='applicantName']", 'Nitesh Sharma');
+        const uniqueApplicantName = generateUniqueName();
+        const uniqueFatherName = generateUniqueName();
+        const uniqueEmail = generateUniqueEmail(uniqueApplicantName);
+        const uniqueMobile = generateUniqueMobileNumber();
+        const uniqueAadhaar = generateValidAadhaarNumber();
+
+        await fillField("input[formcontrolname='applicantName']", uniqueApplicantName);
         await selectDropdown("select[formcontrolname='genderId']", 'Male');
-        await fillField("input[formcontrolname='fatherName']", 'Kunal Sharma');
+        await fillField("input[formcontrolname='fatherName']", uniqueFatherName);
         //await fillField("input[formcontrolname='dob']", '1990-01-01');
         // Open DOB date picker
     const dobInput = await driver.findElement(By.css("input[formcontrolname='dob']"));
@@ -127,7 +181,7 @@ describe('Foreign Verification Automation', function () {
 
         // Select year (example flow: open 2009, then click 2004)
         const year2025 = await driver.wait(
-            until.elementLocated(By.xpath("//span[contains(text(),'2009')]")),
+            until.elementLocated(By.xpath("//span[contains(text(),'2010')]")),
             5000
         );
         await year2025.click();
@@ -135,7 +189,7 @@ describe('Foreign Verification Automation', function () {
         let yearFound = false;
 
         while (!yearFound) {
-             const years = await driver.findElements(By.xpath("//span[text()='2003']"));
+             const years = await driver.findElements(By.xpath("//span[text()='2002']"));
             if (years.length > 0) {
                 await driver.executeScript("arguments[0].click();", years[0]);  // Click 2003 directly
                 yearFound = true;
@@ -169,12 +223,12 @@ describe('Foreign Verification Automation', function () {
         await day14.click();
         await driver.sleep(1000);
 
-        await fillField("input[formcontrolname='email']", 'test' + Math.floor(Math.random() * 1000) + 'new@gmail.com');
-        await fillField("input[formcontrolname='mobNo']", '8892693355');
+        await fillField("input[formcontrolname='email']", uniqueEmail);
+        await fillField("input[formcontrolname='mobNo']", uniqueMobile);
         await selectDropdown("select[formcontrolname='stateId']", 'Bihar');
-        await selectDropdown("select[formcontrolname='districtId']", 'GAYA');
+        await selectDropdown("select[formcontrolname='districtId']", 'GAYA JI');
         await selectDropdown("select[formcontrolname='categoryId']", 'Unreserved (GEN/UR)');
-        await fillField("input[formcontrolname='aadhaarName']", 'Nitesh Sharma');
+        await fillField("input[formcontrolname='aadhaarName']", uniqueApplicantName);
         // Click the Birth Year input field (using placeholder 'YYYY')
         // Click Birth Year field
         await driver.findElement(By.xpath("//input[@placeholder='YYYY']")).click();
@@ -183,15 +237,15 @@ describe('Foreign Verification Automation', function () {
 
         while (!yearSelected) {
             // Try to locate the year 2003 in the currently visible grid
-            const years = await driver.findElements(By.xpath("//span[text()='2003']"));
+            const years = await driver.findElements(By.xpath("//span[text()='2002']"));
             
             if (years.length > 0) {
                 // Year 2003 found, click it
                 await driver.executeScript("arguments[0].click();", years[0]);
                 yearSelected = true; // ✅ set the flag
-                console.log("Year 2003 selected.");
+                console.log("Year 2002 selected.");
             } else {
-                // Year 2003 not found, click the previous button
+                // Year 2002 not found, click the previous button
                 const prevButtons = await driver.findElements(By.css("button.previous"));
 
                 if (prevButtons.length > 0) {
@@ -203,12 +257,9 @@ describe('Foreign Verification Automation', function () {
                 }
             }
         }
-        await fillField("input[formcontrolname='aadharNumber']", '715036049009');
+        await fillField("input[formcontrolname='aadharNumber']", uniqueAadhaar);
         
-        const qualificationDropdown = await driver.findElement(By.css("select[formcontrolname='educationId']"));
-        await qualificationDropdown.click();
-        const intermediateOption = await driver.findElement(By.xpath("//option[text()='Intermediate']"));
-        await intermediateOption.click();
+        await selectDropdown("select[formcontrolname='educationId']", 'Matriculation');
 
         // 3️⃣ Select Year 2020
         const yearInput = await driver.findElement(By.css("input[formcontrolname='passedYear']"));
@@ -250,7 +301,7 @@ describe('Foreign Verification Automation', function () {
             await driver.executeScript("arguments[0].style.display='block';", uploadInput);
 
             // Full path to your PDF file
-            const certificatePath = path.resolve("C:\\Users\\Harsh\\Downloads\\Digital CV.pdf");
+            const certificatePath = path.resolve("C:\\Users\\Archita Verma\\OneDrive - PIRAMAL SWASTHYA MANAGEMENT AND RESEARCH INSTITUTE\\Sample document.pdf");
 
             // Upload the file
             await uploadInput.sendKeys(certificatePath);
@@ -258,6 +309,10 @@ describe('Foreign Verification Automation', function () {
 
        
         await fillField("input[formcontrolname='captcha']", '1');
+
+        // Move viewport slightly down so checkbox and submit area are easy to interact with
+        await driver.executeScript("window.scrollBy(0, 280);");
+        await driver.sleep(800);
 
         // Agree to Aadhaar checkbox (click the actual checkbox, not label)
         const aadhaarCheckboxInput = await driver.findElement(By.css("input[type='checkbox'][id='flexCheckDefault']"));
@@ -316,6 +371,15 @@ try {
     if (tempIdMatch) {
         tempId = tempIdMatch[0];  // whole match, e.g., TEMP12345
     }
+
+    const screenshotDir = path.resolve(__dirname, '../../BNRCscreenshots');
+    if (!fs.existsSync(screenshotDir)) {
+        fs.mkdirSync(screenshotDir, { recursive: true });
+    }
+    const tempIdScreenshotPath = path.join(screenshotDir, `foreign-temp-id-${tempId}.png`);
+    await driver.takeScreenshot().then((image) => fs.writeFileSync(tempIdScreenshotPath, image, 'base64'));
+    console.log('Saved TEMP ID screenshot to:', tempIdScreenshotPath);
+
     //tempId = tempIdMatch ? tempIdMatch[0].replace(/\s+/g, "") : "Not found";
     console.log(" Form submitted successfully. TEMP ID:", tempId);
 } catch (e) {
@@ -331,9 +395,6 @@ try {
     );
     await driver.wait(until.elementIsVisible(okBtn), 5000);
     await driver.sleep(5000);
-    await driver.takeScreenshot().then(function(image) {
-        require('fs').writeFileSync('C:\\Users\\Harsh\\Downloads\\new-course\\bnrc-tests\\BNRCscreenshots\\foreign_registration_success.png', image, 'base64');
-    });
     await driver.executeScript("arguments[0].click();", okBtn);
     console.log("Clicked 'OK' to close popup.");
 } catch (e) {
