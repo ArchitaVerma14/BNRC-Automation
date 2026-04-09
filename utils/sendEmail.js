@@ -86,20 +86,24 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-
+const currentTimeIST = new Date().toLocaleString("en-IN", {
+  timeZone: "Asia/Kolkata",
+  dateStyle: "medium",
+  timeStyle: "short"
+});
 // ===============================
 // ✅ EMAIL BODY (PROFESSIONAL)
 // ===============================
 const mailOptions = {
-  from: process.env.EMAIL_USER,
-  to: process.env.EMAIL_TO || process.env.EMAIL_USER,
+  from: process.env.EMAIL_USER,to: process.env.EMAIL_TO,
+  
 
-  subject: `BNRC Automation Test Report - ${new Date().toLocaleString()}`,
+  subject: `BNRC Automation Test Report - ${currentTimeIST}`,
 
   html: `
     <h2>📊 BNRC Automation Test Report</h2>
 
-    <p><b>Execution Time:</b> ${new Date().toLocaleString()}</p>
+    <p><b>Execution Time:</b> ${currentTimeIST}</p>
 
     <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">
       <tr style="background-color:#f2f2f2;">
