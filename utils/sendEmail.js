@@ -50,6 +50,8 @@ function getStatus(file) {
 const certStatus = getStatus("cert-report.json");
 const transferStatus = getStatus("transfer-report.json");
 const foreignStatus = getStatus("foreign-report.json");
+const prernaStatus = getStatus("prerna-report.json");
+
 // ===============================
 // ✅ ATTACH ONLY LATEST SCREENSHOTS
 // ===============================
@@ -122,6 +124,10 @@ const mailOptions = {
         <td>Foreign Certificate</td>
         <td>${foreignStatus}</td>
       </tr>
+      <tr>
+        <td>PRERNA Events</td>
+        <td>${prernaStatus}</td>
+      </tr>
     </table>
 
     <br/>
@@ -131,6 +137,7 @@ const mailOptions = {
       <li>Certificate: ${certStatus}</li>
       <li>Transfer: ${transferStatus}</li>
       <li>Foreign: ${foreignStatus}</li>
+      <li>PRERNA Events: ${prernaStatus}</li>
     </ul>
 
     <p>📎 Latest screenshots are attached for reference.</p>
