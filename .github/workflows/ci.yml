@@ -6,6 +6,7 @@ on:
   pull_request:
   schedule:
     - cron: '35 4 * * *'   # 10:00 AM IST
+  workflow_dispatch:
 
 jobs:
   test:
@@ -42,6 +43,7 @@ jobs:
         npx playwright test test/e2e/PRERNA-event.spec.js --project=chromium --reporter=json > prerna-report.json || true
     # ✅ Send email AFTER tests
     - name: Send email notification
+      if: github.event_name != 'push'
       run: node utils/sendEmail.js
       env:
         EMAIL_USER: ${{ secrets.EMAIL_USER }}
