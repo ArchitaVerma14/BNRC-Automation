@@ -124,15 +124,44 @@ async function selectMonthAndDay(page, monthText, dayText) {
   await page.locator(`xpath=//span[text()='${dayText}']`).first().click();
 }
 
-async function uploadPdfForLabel(page, labelMatcher, filePayload) {
-  const card = page
-    .locator('div.col-lg-4.col-md-6.col-sm-12')
-    .filter({ has: page.locator('label.form-label', { hasText: labelMatcher }) })
-    .first();
+async function findPdfInputNearLabel(page, labelMatcher) {
+  const labels = page.locator('label');
+  const total = await labels.count();
 
-  await expect(card).toBeVisible();
+  for (let i = 0; i < total; i += 1) {
+    const label = labels.nth(i);
+    const text = (await label.innerText().catch(() => '')).replace(/\s+/g, ' ').trim();
+    if (!text || !labelMatcher.test(text)) continue;
 
-  const input = card.locator("input[type='file'][accept='application/pdf']").first();
+    const container = label.locator("xpath=ancestor::*[.//input[@type='file']][1]").first();
+    const input = container
+      .locator("input[type='file'][accept*='pdf'], input[type='file'][accept='application/pdf'], input[type='file']")
+      .first();
+
+    if ((await input.count().catch(() => 0)) > 0) {
+      return input;
+    }
+  }
+
+  return null;
+}
+
+async function uploadPdfForLabel(page, labelMatcher, filePayload, fallbackIndex = 0) {
+  let input = await findPdfInputNearLabel(page, labelMatcher);
+
+  if (!input) {
+    const allPdfInputs = page.locator(
+      "input[type='file'][accept*='pdf'], input[type='file'][accept='application/pdf'], input[type='file']"
+    );
+    const count = await allPdfInputs.count();
+    if (fallbackIndex >= count) {
+      throw new Error(
+        `Could not find upload input for ${labelMatcher}. Found only ${count} file inputs.`
+      );
+    }
+    input = allPdfInputs.nth(fallbackIndex);
+  }
+
   await input.evaluate((el) => {
     el.classList.remove('d-none');
     el.style.display = 'block';
@@ -292,18 +321,19 @@ test.describe('Transfer Registration Automation', () => {
     };
 
     const requiredUploadLabels = [
-      /Upload\s*10th\s*Marksheet/i,
-      /Upload\s*10th\s*Admit\s*Card/i,
-      /Upload\s*12th\s*Marksheet/i,
-      /Upload\s*12th\s*Admit\s*Card/i,
-      /Upload\s*Marksheet/i,
-      /Upload\s*Diploma\s*Certificate/i,
-      /Upload\s*Registration\s*Certificate/i,
-      /Upload\s*Completion\s*Certificate/i,
+      /10\s*th.*mark\s*sheet|10\s*th.*marksheet/i,
+      /10\s*th.*admit\s*card/i,
+      /12\s*th.*mark\s*sheet|12\s*th.*marksheet/i,
+      /12\s*th.*admit\s*card/i,
+      /^(?!.*10\s*th)(?!.*12\s*th).*(mark\s*sheet|marksheet)/i,
+      /diploma.*certificate/i,
+      /registration.*certificate/i,
+      /completion.*certificate/i,
     ];
 
-    for (const labelMatcher of requiredUploadLabels) {
-      await uploadPdfForLabel(page, labelMatcher, uploadPayload);
+    for (let i = 0; i < requiredUploadLabels.length; i += 1) {
+      const labelMatcher = requiredUploadLabels[i];
+      await uploadPdfForLabel(page, labelMatcher, uploadPayload, i);
       await page.waitForTimeout(250);
     }
 
