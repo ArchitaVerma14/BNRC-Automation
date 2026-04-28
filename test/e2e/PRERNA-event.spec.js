@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 function makeAlphabeticName(prefix, maxLength = 15) {
 	const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -19,7 +19,8 @@ test('event registration copy', async ({ page }) => {
 	const applicantName = makeAlphabeticName('App');
 	await page.getByRole('combobox').first().selectOption('2');
 	await page.getByRole('textbox', { name: 'DD-MM-YYYY' }).click();
-	await page.getByRole('gridcell', { name: '22' }).click();
+	await expect(page.getByRole('dialog', { name: 'calendar' })).toBeVisible();
+	await page.locator('span[bsdatepickerdaydecorator]:not(.disabled)').getByText('30', { exact: true }).click();
 	await page.locator('div').filter({ hasText: /^Institute Name\*$/ }).getByRole('textbox').click();
 	await page.locator('div').filter({ hasText: /^Institute Name\*$/ }).getByRole('textbox').fill(instituteName);
 	await page.locator('div').filter({ hasText: /^Applicant Name\*$/ }).getByRole('textbox').click();
