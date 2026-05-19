@@ -237,156 +237,196 @@ test.describe('Transfer Registration Automation', () => {
     test.setTimeout(180000);
 
     const usedContactNumbers = new Set();
+    const uniqueMobileNumber = generateUniqueMobileNumber(usedContactNumbers);
+    const uniqueEmail = generateUniqueEmail('transfer');
+    const briefPause = async (ms = 150) => page.waitForTimeout(ms);
 
-    await page.goto('http://68.233.110.246/bnrc_stg/home', { waitUntil: 'domcontentloaded' });
+    await page.goto('http://68.233.110.246/bnrc_stg/Website/transferIntoBihar');
+    await page.locator('.form-select').first().selectOption('13');
+    await briefPause();
+    await page.getByRole('textbox', { name: 'Enter Name of Applicant' }).click();
+    await page.getByRole('textbox', { name: 'Enter Name of Applicant' }).fill('demodemo');
+    await briefPause();
+    await page.getByRole('textbox', { name: "Enter Father's Name" }).click();
+    await page.getByRole('textbox', { name: "Enter Father's Name" }).fill('demo father');
+    await briefPause();
+    await page.locator('input[name="dob"]').click();
+    await page.getByRole('button', { name: '2026' }).click();
+    await page.getByRole('button', { name: '‹' }).click();
+    await page.getByText('2003', { exact: true }).click();
+    await page.getByText('February').click();
+    await page.getByText('1', { exact: true }).first().click();
+    await briefPause(200);
+    const genderLocator = page.locator('select[formcontrolname="gender"]');
+    try { await page.keyboard.press('Escape'); } catch {}
+    await page.waitForTimeout(200);
+    try { await page.evaluate(() => { if (document.activeElement) document.activeElement.blur(); }); } catch {}
 
-    const startupOk = page.locator("button.swal2-confirm, button:has-text('OK')").first();
-    if (await startupOk.isVisible().catch(() => false)) {
-      await startupOk.click({ force: true });
-    }
-
-    const eApplication = page.locator("a.nav-link.dropdown-toggle:has-text('E-Application')").first();
-    await eApplication.scrollIntoViewIfNeeded();
-    await eApplication.hover();
     try {
-      await eApplication.click();
-    } catch {
-      await eApplication.click({ force: true });
+      await genderLocator.waitFor({ state: 'attached', timeout: 3000 });
+      await genderLocator.scrollIntoViewIfNeeded();
+      await genderLocator.selectOption('1');
+    } catch (e) {
+      // fallback to name selector
+      try {
+        const genderByName = page.locator('select[name="gender"]');
+        await genderByName.scrollIntoViewIfNeeded();
+        await genderByName.selectOption('1');
+      } catch (e2) {
+        // last resort: set via JS
+        try {
+          await page.evaluate(() => {
+            const s = document.querySelector('select[formcontrolname="gender"]') || document.querySelector('select[name="gender"]');
+            if (s) {
+              s.value = '1';
+              s.dispatchEvent(new Event('input', { bubbles: true }));
+              s.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          });
+        } catch {}
+      }
     }
-
-    await page
-      .locator("a.dropdown-item[href='/bnrc_stg/Website/transferIntoBihar']")
-      .first()
-      .click();
-
-    await page.locator("select[formcontrolname='courseId']").selectOption('2');
-
-    await fillField(page.locator("input[formcontrolname='nameOfApplicant']"), 'Testtest');
-    await fillField(page.locator("input[formcontrolname='fatherName']"), 'Father Test');
-
-    await openDatePicker(page, "input[formcontrolname='dob']", '2026');
-    await selectYearSlow(page, '2003');
-    await selectMonthAndDay(page, 'June', '14');
-
-    const applicantEmail = generateUniqueEmail('transfer');
-    await fillField(page.locator("input[formcontrolname='emailId']"), applicantEmail);
-
-    await selectByVisibleLabel(page, "select[formcontrolname='stateId']", 'Bihar');
-    await selectByVisibleLabel(page, "select[formcontrolname='districtId']", 'GAYA JI');
-    await selectByVisibleLabel(page, "select[formcontrolname='casteCategory']", 'Unreserved (GEN/UR)');
-
-    await fillField(page.locator("input[formcontrolname='pinCode']"), '800002');
-    await fillField(page.locator("textarea[formcontrolname='address']"), 'Ashok Nagar, gaya');
-
-    await selectByVisibleLabel(page, "select[formcontrolname='educationId']", 'Intermediate');
-
-    await openDatePicker(page, "input[formcontrolname='passedYear']");
-    await page.waitForTimeout(700);
-    await selectYearSlow(page, '2020');
-
-    await fillField(page.locator("input[formcontrolname='boardName']"), 'CBSE');
-    await fillField(page.locator("input[formcontrolname='securedMarks']"), '90');
-
-    await selectByVisibleLabel(page, "select[formcontrolname='councilSate']", 'Assam');
-
-    await fillField(page.locator("input[formcontrolname='currentRegistrationCouncil']"), '8885786353');
-
-    await openDatePicker(page, "input[formcontrolname='issueDate']", '2026');
-    await selectYearSlow(page, '2018');
-    await selectMonthAndDay(page, 'May', '12');
-
-    await page.locator("input[formcontrolname='validTillDate']").first().click();
-    for (let i = 0; i < 24; i += 1) {
-      const decemberVisible = await page
-        .locator("xpath=//button[@class='current ng-star-inserted']/span[text()='December']")
-        .first()
-        .isVisible()
-        .catch(() => false);
-      if (decemberVisible) break;
-      await page.locator('button.next').first().click();
-      await page.waitForTimeout(450);
-    }
-    await page.locator("xpath=//span[text()='10']").first().click();
-
-    const certificatePath = path.resolve('./Sample document.pdf');
-    if (!fs.existsSync(certificatePath)) {
-      throw new Error(`Upload file not found at path: ${certificatePath}`);
-    }
-    const certificateBuffer = fs.readFileSync(certificatePath);
-
-    const uploadPayload = {
-      name: 'Sample document.pdf',
-      mimeType: 'application/pdf',
-      buffer: certificateBuffer,
-    };
-
-    const requiredUploadLabels = [
-      /10\s*th.*mark\s*sheet|10\s*th.*marksheet/i,
-      /10\s*th.*admit\s*card/i,
-      /12\s*th.*mark\s*sheet|12\s*th.*marksheet/i,
-      /12\s*th.*admit\s*card/i,
-      /^(?!.*10\s*th)(?!.*12\s*th).*(mark\s*sheet|marksheet)/i,
-      /diploma.*certificate/i,
-      /registration.*certificate/i,
-      /completion.*certificate/i,
-    ];
-
-    for (let i = 0; i < requiredUploadLabels.length; i += 1) {
-      const labelMatcher = requiredUploadLabels[i];
-      await uploadPdfForLabel(page, labelMatcher, uploadPayload, i);
-      await page.waitForTimeout(250);
-    }
-
-    await page
-      .locator("input[type='radio'][formcontrolname='incCompliant'][value='2']")
-      .first()
-      .check({ force: true });
-
-    const uniqueOrganizationPhoneNumber = generateUniqueOrganizationPhoneNumber(usedContactNumbers);
-    await fillField(page.locator("input[formcontrolname='organizationPhoneNo']"), uniqueOrganizationPhoneNumber);
-
-    const organizationEmail = generateUniqueEmail('org');
-    await fillField(page.locator("input[formcontrolname='organizationEmailId']"), organizationEmail);
-
-    const uniqueAuthorizedMobileNumber = generateUniqueMobileNumber(usedContactNumbers);
-    await setFieldValueWithoutJump(page, "input[formcontrolname='mobNo']", uniqueAuthorizedMobileNumber);
-
-    const sendOtpButton = page.locator("xpath=//button[contains(text(),'Send OTP')]").first();
-    await sendOtpButton.scrollIntoViewIfNeeded();
-    await sendOtpButton.click();
-    await clickSweetAlertOk(page);
-
-    await fillField(page.locator("input[formcontrolname='otp']"), '123456');
-    await page.locator("xpath=//button[normalize-space()='Verify OTP']").first().click();
-    await clickSweetAlertOk(page);
-
-    await fillField(page.locator("input[formcontrolname='captcha']"), '1');
-
-    await ensureAgreementChecked(page);
-
-    const submitBtn = page.locator("button[type='submit'].btn-success").first();
-    await submitBtn.scrollIntoViewIfNeeded();
-    await submitBtn.click();
-
-    const yesBtn = page.getByRole('button', { name: /Yes, save it!/i }).first();
-    await yesBtn.click({ force: true });
+    await page.getByRole('textbox', { name: 'Enter your Email' }).click();
+    await page.getByRole('textbox', { name: 'Enter your Email' }).fill(uniqueEmail);
+    await briefPause();
+    await page.locator('select[formcontrolname="casteCategory"]').selectOption('2');
+    await briefPause();
+    await page.getByRole('textbox', { name: 'Enter Name As Per Aadhaar' }).click();
+    await page.getByRole('textbox', { name: 'Enter Name As Per Aadhaar' }).fill('demodemo');
+    await page.locator('input[name="birthYear"]').click();
+    await page.getByRole('button', { name: '‹' }).click();
+    await page.getByText('2003', { exact: true }).click();
+    await page.getByRole('textbox', { name: 'Enter Aadhaar Number' }).click();
+    await page.getByRole('textbox', { name: 'Enter Aadhaar Number' }).fill('654003457010');
+    await page.locator('select[name="stateIdCross"]').selectOption('6');
+    await page.getByRole('textbox', { name: 'Enter District' }).click();
+    await page.getByRole('textbox', { name: 'Enter District' }).fill('ssssssssssss');
+    await page.getByRole('textbox', { name: 'Enter Pin Code' }).first().click();
+    await page.getByRole('textbox', { name: 'Enter Pin Code' }).first().fill('997837');
+    await page.getByRole('textbox', { name: 'Enter Address' }).first().click();
+    await page.getByRole('textbox', { name: 'Enter Address' }).first().fill('hssssssssssssssse3');
+    await page.getByRole('checkbox', { name: 'Permanent Address same as' }).check();
+    await page.locator('.form-select.education').selectOption('16');
+    await page.locator('input[name="sessionFrom"]').click();
+    await page.getByText('2020').click();
+    await page.locator('input[name="sessionTo"]').click();
+    await page.getByText('2021').click();
+    await page.locator('input[name="passedYear"]').click();
+    await page.getByText('2021').click();
+    await page.getByRole('textbox', { name: 'Enter College Name' }).click();
+    await page.getByRole('textbox', { name: 'Enter College Name' }).fill('abshdskhf');
+    await page.getByRole('textbox', { name: 'Enter Examination Conducted By' }).click();
+    await page.getByRole('textbox', { name: 'Enter Examination Conducted By' }).fill('dddddddddddddd');
+    await page.getByRole('textbox', { name: 'Enter Board Name' }).click();
+    await page.getByRole('textbox', { name: 'Enter Board Name' }).fill('eeeeeeeee');
+    await page.getByRole('textbox', { name: 'Enter Secured Marks' }).click();
+    await page.getByRole('textbox', { name: 'Enter Secured Marks' }).fill('67');
+    await briefPause();
+    await page.getByRole('button', { name: 'Add More' }).click();
+    await briefPause(250);
+    await page.locator('select[formcontrolname="educationId"]').nth(1).selectOption('17');
+    await page.locator('input[name="sessionFrom"]').nth(1).click();
+    await page.getByText('2022').click();
+    await page.locator('input[name="sessionTo"]').nth(1).click();
+    await page.getByText('2023').click();
+    await page.locator('input[name="passedYear"]').nth(1).click();
+    await page.getByText('2023').click();
+    await page.getByRole('textbox', { name: 'Enter College Name' }).nth(1).click();
+    await page.getByRole('textbox', { name: 'Enter College Name' }).nth(1).fill('fffffffff');
+    await page.getByRole('textbox', { name: 'Enter Examination Conducted By' }).nth(1).click();
+    await page.getByRole('textbox', { name: 'Enter Examination Conducted By' }).nth(1).fill('eeeeeeeeeeeeee');
+    await page.getByRole('textbox', { name: 'Enter Board Name' }).nth(1).click();
+    await page.getByRole('textbox', { name: 'Enter Board Name' }).nth(1).fill('ffffffffffffff');
+    await page.getByRole('textbox', { name: 'Enter Secured Marks' }).nth(1).click();
+    await page.getByRole('textbox', { name: 'Enter Secured Marks' }).nth(1).fill('77');
+    await briefPause();
+    await page.locator('select[name="stateId"]').selectOption('12');
+    await page.getByRole('textbox', { name: 'Enter Current Registered' }).click();
+    await page.getByRole('textbox', { name: 'Enter Current Registered' }).fill('5555555y');
+    await page.locator('input[name="issueDate"]').click();
+    await page.getByRole('button', { name: '2026' }).click();
+    await page.getByText('2020').click();
+    await page.getByText('March').click();
+    await page.getByText('11').nth(2).click();
+    await page.locator('input[name="validTillDate"]').click();
+    await page.getByRole('button', { name: '2026' }).click();
+    await page.getByText('2034', { exact: true }).click();
+    await page.getByText('September').click();
+    await page.getByText('22').click();
+    const samplePdf = 'C:\\Users\\Archita Verma\\OneDrive - PIRAMAL SWASTHYA MANAGEMENT AND RESEARCH INSTITUTE\\Sample document.pdf';
+    await uploadPdfForLabel(page, /10th Marksheet/i, samplePdf, 0);
+    await uploadPdfForLabel(page, /10th Admit Card/i, samplePdf, 1);
+    await uploadPdfForLabel(page, /12th Marksheet/i, samplePdf, 2);
+    await uploadPdfForLabel(page, /12th Admit Card/i, samplePdf, 3);
+    await uploadPdfForLabel(page, /ANM Marksheet/i, samplePdf, 4);
+    await uploadPdfForLabel(page, /ANM Degree Certificate/i, samplePdf, 5);
+    await uploadPdfForLabel(page, /ANM Registration Certificate/i, samplePdf, 6);
+    await uploadPdfForLabel(page, /Caste Certificate/i, samplePdf, 7);
+    await page.getByRole('textbox', { name: 'Enter Mobile Number' }).click();
+    await page.getByRole('textbox', { name: 'Enter Mobile Number' }).fill(uniqueMobileNumber);
+    await page.getByRole('button', { name: 'Send OTP' }).click();
+    await page.getByRole('button', { name: 'OK' }).click();
+    await page.getByRole('textbox', { name: 'Enter OTP' }).click();
+    await page.getByRole('textbox', { name: 'Enter OTP' }).fill('123456');
+    await page.getByRole('button', { name: 'Verify OTP' }).click();
+    await page.getByRole('button', { name: 'OK' }).click();
+    await page.getByRole('textbox', { name: 'Enter Answer' }).click();
+    await page.getByRole('textbox', { name: 'Enter Answer' }).fill('1');
+    await page.getByRole('checkbox', { name: 'I Agree.I hereby declare that' }).check();
+    await page.getByRole('button', { name: 'Add More' }).click();
+    await briefPause(250);
+    await page.locator('select[formcontrolname="educationId"]').nth(2).selectOption('13');
+    await page.locator('input[name="sessionFrom"]').nth(2).click();
+    await page.getByText('2023').click();
+    await page.locator('input[name="sessionTo"]').nth(2).click();
+    await page.getByText('2025', { exact: true }).click();
+    await page.locator('input[name="passedYear"]').nth(2).click();
+    await page.getByText('2025', { exact: true }).click();
+    await page.getByRole('textbox', { name: 'Enter College Name' }).nth(2).click();
+    await page.getByRole('textbox', { name: 'Enter College Name' }).nth(2).fill('vvvvvvvvvvv');
+    await page.getByRole('textbox', { name: 'Enter Examination Conducted By' }).nth(2).click();
+    await page.getByRole('textbox', { name: 'Enter Examination Conducted By' }).nth(2).fill('fffffffffffffffff');
+    await page.getByRole('textbox', { name: 'Enter Board Name' }).nth(2).click();
+    await page.getByRole('textbox', { name: 'Enter Board Name' }).nth(2).fill('ffffffffffffffff');
+    await page.getByRole('textbox', { name: 'Enter Secured Marks' }).nth(2).click();
+    await page.getByRole('textbox', { name: 'Enter Secured Marks' }).nth(2).fill('88');
+    await briefPause();
+    await page.getByRole('button', { name: 'Submit' }).click();
+    await page.getByRole('button', { name: 'Yes, save it!' }).click();
 
     const swalContainer = page.locator('div.swal2-html-container').first();
     await expect(swalContainer).toContainText(/TEMP\d+/);
-
     const swalText = await swalContainer.innerText();
     const tempIdMatch = swalText.match(/TEMP\d+/);
     const tempId = tempIdMatch ? tempIdMatch[0] : 'Not-found';
 
+    // Take a screenshot of the TEMP popup itself, then close the page
     const screenshotDir = path.resolve(__dirname, '../../BNRCscreenshots');
     if (!fs.existsSync(screenshotDir)) {
       fs.mkdirSync(screenshotDir, { recursive: true });
     }
 
-    const screenshotPath = path.join(screenshotDir, `transfer-temp-id-${tempId}.png`);
-    await page.screenshot({ path: screenshotPath, fullPage: true });
+    try {
+      const popup = page.locator('div.swal2-popup.swal2-modal').first();
+      const popupPath = path.join(screenshotDir, `transfer-temp-popup-${tempId}.png`);
+      if (await popup.isVisible().catch(() => false)) {
+        await popup.screenshot({ path: popupPath });
+      } else {
+        // fallback to full page screenshot if popup not visible
+        const fallbackPath = path.join(screenshotDir, `transfer-temp-id-${tempId}.png`);
+        await page.screenshot({ path: fallbackPath, fullPage: true });
+      }
+    } catch (e) {
+      const fallbackPath = path.join(screenshotDir, `transfer-temp-id-${tempId}.png`);
+      try { await page.screenshot({ path: fallbackPath, fullPage: true }); } catch {}
+    }
 
-    const okBtn = page.getByRole('button', { name: /^OK$/i }).first();
-    await okBtn.click({ force: true });
+    // Close the popup by clicking OK if present, then close the page
+    try {
+      const okBtn = page.getByRole('button', { name: /^OK$/i }).first();
+      if (await okBtn.isVisible().catch(() => false)) await okBtn.click({ force: true });
+    } catch {}
+
+    try { await page.close(); } catch {}
   });
 });
