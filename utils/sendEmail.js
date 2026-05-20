@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { readFileSync, readdirSync, statSync } from "fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 
 console.log("Preparing test report email...");
@@ -47,10 +47,16 @@ function getStatus(file) {
 // ===============================
 // ✅ READ TEST RESULTS
 // ===============================
-const certStatus = getStatus("cert-report.json");
-const transferStatus = getStatus("transfer-report.json");
-const foreignStatus = getStatus("foreign-report.json");
-const prernaStatus = getStatus("prerna-report.json");
+const testSuites = [
+  { label: "Certificate Verification", summaryLabel: "Certificate", reportFile: "cert-report.json" },
+  { label: "Transfer Certificate", summaryLabel: "Transfer", reportFile: "transfer-report.json" },
+  { label: "PRERNA Events", summaryLabel: "PRERNA Events", reportFile: "prerna-report.json" },
+].filter((suite) => existsSync(suite.reportFile));
+
+const suiteStatuses = testSuites.map((suite) => ({
+  ...suite,
+  status: getStatus(suite.reportFile),
+}));
 
 // ===============================
 // ✅ ATTACH ONLY LATEST SCREENSHOTS
@@ -112,32 +118,24 @@ const mailOptions = {
         <th>Test Module</th>
         <th>Status</th>
       </tr>
+      ${suiteStatuses
+        .map(
+          (suite) => `
       <tr>
-        <td>Certificate Verification</td>
-        <td>${certStatus}</td>
-      </tr>
-      <tr>
-        <td>Transfer Certificate</td>
-        <td>${transferStatus}</td>
-      </tr>
-      <tr>
-        <td>Foreign Certificate</td>
-        <td>${foreignStatus}</td>
-      </tr>
-      <tr>
-        <td>PRERNA Events</td>
-        <td>${prernaStatus}</td>
-      </tr>
+        <td>${suite.label}</td>
+        <td>${suite.status}</td>
+      </tr>`
+        )
+        .join("")}
     </table>
 
     <br/>
 
     <h3>📌 Summary</h3>
     <ul>
-      <li>Certificate: ${certStatus}</li>
-      <li>Transfer: ${transferStatus}</li>
-      <li>Foreign: ${foreignStatus}</li>
-      <li>PRERNA Events: ${prernaStatus}</li>
+      ${suiteStatuses
+        .map((suite) => `<li>${suite.summaryLabel}: ${suite.status}</li>`)
+        .join("")}
     </ul>
 
     <p>📎 Latest screenshots are attached for reference.</p>
