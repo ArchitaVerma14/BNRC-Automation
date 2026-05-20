@@ -353,7 +353,7 @@ test.describe('Transfer Registration Automation', () => {
     await page.getByText('2034', { exact: true }).click();
     await page.getByText('September').click();
     await page.getByText('22').click();
-    const samplePdf = 'C:\\Users\\Archita Verma\\OneDrive - PIRAMAL SWASTHYA MANAGEMENT AND RESEARCH INSTITUTE\\Sample document.pdf';
+    const samplePdf = path.resolve(__dirname, '../../utils/Sample document.pdf');
     await uploadPdfForLabel(page, /10th Marksheet/i, samplePdf, 0);
     await uploadPdfForLabel(page, /10th Admit Card/i, samplePdf, 1);
     await uploadPdfForLabel(page, /12th Marksheet/i, samplePdf, 2);
