@@ -9,7 +9,19 @@ console.log("Preparing test report email...");
 // ===============================
 function getStatus(file) {
   try {
-    const data = JSON.parse(readFileSync(file, "utf-8"));
+    const raw = readFileSync(file, "utf-8");
+    if (!raw || raw.trim().length === 0) {
+      console.log(`Report ${file} is empty`);
+      return "NOT RUN ⚠️";
+    }
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (parseErr) {
+      console.log(`Error parsing ${file}: ${parseErr.message}`);
+      console.log(`Preview (${file}):`, raw.slice(0, 800));
+      return "NOT RUN ⚠️";
+    }
 
     let results = [];
 
@@ -51,11 +63,26 @@ const testSuites = [
   { label: "Certificate Verification", summaryLabel: "Certificate", reportFile: "cert-report.json" },
   { label: "Transfer Certificate", summaryLabel: "Transfer", reportFile: "transfer-report.json" },
   { label: "PRERNA Events", summaryLabel: "PRERNA Events", reportFile: "prerna-report.json" },
-].filter((suite) => existsSync(suite.reportFile));
+];
+
+console.log("Looking for report files in working directory...");
+for (const s of testSuites) {
+  if (existsSync(s.reportFile)) {
+    try {
+      const stats = statSync(s.reportFile);
+      console.log(`Found ${s.reportFile} (${stats.size} bytes)`);
+    } catch (err) {
+      console.log(`Found ${s.reportFile}`);
+    }
+  } else {
+    console.log(`Missing ${s.reportFile}`);
+  }
+}
 
 const suiteStatuses = testSuites.map((suite) => ({
   ...suite,
-  status: getStatus(suite.reportFile),
+  exists: existsSync(suite.reportFile),
+  status: existsSync(suite.reportFile) ? getStatus(suite.reportFile) : "NOT RUN ⚠️ (report missing)",
 }));
 
 // ===============================

@@ -39,19 +39,19 @@ jobs:
     - name: Run Certificate tests
       continue-on-error: true
       run: |
-        npx playwright test test/e-applications/certificate.spec.js --project=chromium --reporter=json --reporter=html > cert-report.json || true
+        npx playwright test test/e-applications/certificate.spec.js --project=chromium --reporter=json=cert-report.json --reporter=html || true
         if [ -d playwright-report ]; then mv playwright-report playwright-report-cert; fi
 
     - name: Run Transfer tests
       continue-on-error: true
       run: |
-        npx playwright test test/e-applications/transfer.spec.js --project=chromium --reporter=json --reporter=html > transfer-report.json || true
+        npx playwright test test/e-applications/transfer.spec.js --project=chromium --reporter=json=transfer-report.json --reporter=html || true
         if [ -d playwright-report ]; then mv playwright-report playwright-report-transfer; fi
 
     - name: Run PRERNA tests
       continue-on-error: true
       run: |
-        npx playwright test test/e2e/PRERNA-event.spec.js --project=chromium --reporter=json --reporter=html > prerna-report.json || true
+        npx playwright test test/e2e/PRERNA-event.spec.js --project=chromium --reporter=json=prerna-report.json --reporter=html || true
         if [ -d playwright-report ]; then mv playwright-report playwright-report-prerna; fi
 
     - name: Upload HTML reports
@@ -73,3 +73,4 @@ jobs:
         EMAIL_USER: ${{ secrets.EMAIL_USER }}
         EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
         EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        
