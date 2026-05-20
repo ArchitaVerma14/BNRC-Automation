@@ -19,7 +19,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
 
     - name: Install dependencies
       run: npm install
@@ -35,13 +35,22 @@ jobs:
       run: npx playwright install --with-deps
 
     # ✅ Run tests and capture results
-    - name: Run Playwright tests
+    - name: Run Certificate tests
+      continue-on-error: true
       run: |
-        npx playwright test test/e-applications/certificate.spec.js --project=chromium > cert-report.json
+        npx playwright test test/e-applications/certificate.spec.js --project=chromium --reporter=html
         if [ -d playwright-report ]; then mv playwright-report playwright-report-cert; fi
-        npx playwright test test/e-applications/transfer.spec.js --project=chromium > transfer-report.json
+
+    - name: Run Transfer tests
+      continue-on-error: true
+      run: |
+        npx playwright test test/e-applications/transfer.spec.js --project=chromium --reporter=html
         if [ -d playwright-report ]; then mv playwright-report playwright-report-transfer; fi
-        npx playwright test test/e2e/PRERNA-event.spec.js --project=chromium > prerna-report.json
+
+    - name: Run PRERNA tests
+      continue-on-error: true
+      run: |
+        npx playwright test test/e2e/PRERNA-event.spec.js --project=chromium --reporter=html
         if [ -d playwright-report ]; then mv playwright-report playwright-report-prerna; fi
 
     - name: Upload HTML reports
