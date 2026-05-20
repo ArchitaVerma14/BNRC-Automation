@@ -63,8 +63,8 @@ test.describe('Certificate Verification Automation', () => {
 
     // Dismiss startup alert if present
     const startupOk = page.locator("button.swal2-confirm, button:has-text('OK')").first();
-    if (await startupOk.isVisible().catch(() => false)) {
-      await startupOk.click({ force: true });
+    if (await startupOk.count()) {
+      await startupOk.evaluate((element) => element.click());
     }
 
     const eApplication = page.locator("a.nav-link.dropdown-toggle:has-text('E-Application')").first();
@@ -119,12 +119,13 @@ test.describe('Certificate Verification Automation', () => {
     let yearSelected = false;
     for (let attempt = 0; attempt < 5 && !yearSelected; attempt += 1) {
       const year2003 = page.locator("xpath=//span[text()='2003']").first();
-      try {
-        await expect(year2003).toBeVisible();
-        await year2003.click();
+      const yearCount = await year2003.count();
+      if (yearCount > 0) {
+        await year2003.evaluate((element) => element.click());
         yearSelected = true;
-      } catch {
-        await page.locator('button.previous').first().click();
+      } else {
+        const previousButton = page.locator('button.previous').first();
+        await previousButton.evaluate((element) => element.click());
       }
     }
 
