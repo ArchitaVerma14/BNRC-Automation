@@ -20,6 +20,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
+        cache: 'npm'
 
     - name: Install dependencies
       run: npm install
@@ -54,7 +55,7 @@ jobs:
         if [ -d playwright-report ]; then mv playwright-report playwright-report-prerna; fi
 
     - name: Upload HTML reports
-      if: always()
+      if: failure()
       uses: actions/upload-artifact@v4
       with:
         name: playwright-html-reports
