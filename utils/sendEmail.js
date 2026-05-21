@@ -23,6 +23,14 @@ function getStatus(file) {
       return "NOT RUN ⚠️";
     }
 
+    // Support simple CI-generated status JSON.
+    if (typeof data.status === "string") {
+      const normalized = data.status.trim().toUpperCase();
+      if (normalized === "PASS" || normalized === "PASSED") return "PASS ✅";
+      if (normalized === "FAIL" || normalized === "FAILED") return "FAIL ❌";
+      if (normalized === "NOT RUN") return "NOT RUN ⚠️";
+    }
+
     let results = [];
 
     function extractSuites(suites) {

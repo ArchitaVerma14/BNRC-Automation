@@ -39,19 +39,34 @@ jobs:
     - name: Run Certificate tests
       continue-on-error: true
       run: |
-        npx playwright test test/e-applications/certificate.spec.js --project=chromium --reporter=json=cert-report.json --reporter=html || true
+        set +e
+        npx playwright test test/e-applications/certificate.spec.js --project=chromium --reporter=html
+        rc=$?
+        if [ "$rc" -eq 0 ]; then status="PASS"; else status="FAIL"; fi
+        printf '{"status":"%s","suite":"Certificate Verification","source":"ci-exit-code"}\n' "$status" > cert-report.json
+        set -e
         if [ -d playwright-report ]; then mv playwright-report playwright-report-cert; fi
 
     - name: Run Transfer tests
       continue-on-error: true
       run: |
-        npx playwright test test/e-applications/transfer.spec.js --project=chromium --reporter=json=transfer-report.json --reporter=html || true
+        set +e
+        npx playwright test test/e-applications/transfer.spec.js --project=chromium --reporter=html
+        rc=$?
+        if [ "$rc" -eq 0 ]; then status="PASS"; else status="FAIL"; fi
+        printf '{"status":"%s","suite":"Transfer Certificate","source":"ci-exit-code"}\n' "$status" > transfer-report.json
+        set -e
         if [ -d playwright-report ]; then mv playwright-report playwright-report-transfer; fi
 
     - name: Run PRERNA tests
       continue-on-error: true
       run: |
-        npx playwright test test/e2e/PRERNA-event.spec.js --project=chromium --reporter=json=prerna-report.json --reporter=html || true
+        set +e
+        npx playwright test test/e2e/PRERNA-event.spec.js --project=chromium --reporter=html
+        rc=$?
+        if [ "$rc" -eq 0 ]; then status="PASS"; else status="FAIL"; fi
+        printf '{"status":"%s","suite":"PRERNA Events","source":"ci-exit-code"}\n' "$status" > prerna-report.json
+        set -e
         if [ -d playwright-report ]; then mv playwright-report playwright-report-prerna; fi
 
     - name: Upload HTML reports
@@ -65,6 +80,17 @@ jobs:
           playwright-report-prerna
         if-no-files-found: ignore
         retention-days: 7
+    
+    - name: Verify JSON reports for mailer
+      if: always()
+      run: |
+        for f in cert-report.json transfer-report.json prerna-report.json; do
+          if [ -f "$f" ]; then
+            echo "$f found ($(stat -c%s $f) bytes)"
+          else
+            echo "WARNING: $f is missing"
+          fi
+        done
     # ✅ Send email AFTER tests
     - name: Send email notification
       if: always()
