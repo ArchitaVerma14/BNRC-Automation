@@ -83,6 +83,13 @@ test.describe('Certificate Verification Automation', () => {
 
     await page.locator("select[formcontrolname='course']").selectOption('2');
 
+    // Fill Registration Number (required field)
+    await fillField(page.locator("input[formcontrolname='registrationNumber']"), 'REG2020001');
+
+    // Session From and Session To — MM-YYYY text inputs (not year pickers)
+    await fillField(page.locator("input[name='sessionFrom']"), '06-2020');
+    await fillField(page.locator("input[name='sessionTo']"), '06-2022');
+
     await fillField(page.locator("input[formcontrolname='applicantName']"), 'DemodTest');
     await fillField(page.locator("input[formcontrolname='fatherName']"), 'Father Test');
 

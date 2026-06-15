@@ -232,6 +232,35 @@ async function ensureAgreementChecked(page) {
   await expect(checkbox).toBeChecked();
 }
 
+async function pickYear(page, inputLocator, year) {
+  // Click to open the picker, select the year cell, then close
+  await inputLocator.scrollIntoViewIfNeeded();
+  await inputLocator.click();
+  const picker = page.locator('bs-datepicker-container');
+  await picker.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+  await page.waitForTimeout(300);
+  const yearCell = page.locator('bs-datepicker-container table.years td:not(.disabled) span').filter({ hasText: new RegExp(`^${year}$`) }).first();
+  let clicked = false;
+  for (let i = 0; i < 5; i++) {
+    if (await yearCell.isVisible().catch(() => false)) {
+      await yearCell.click();
+      clicked = true;
+      break;
+    }
+    await page.locator('bs-datepicker-container button.previous').first().click();
+    await page.waitForTimeout(300);
+  }
+  if (!clicked) {
+    // fallback: fill directly and trigger Angular events
+    await inputLocator.fill(year);
+    await inputLocator.press('Tab');
+  }
+  // Close picker if still open
+  const pickerVisible = await picker.isVisible().catch(() => false);
+  if (pickerVisible) await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+}
+
 test.describe('Transfer Registration Automation', () => {
   test('should register a Transfer Registration with sample data', async ({ page }) => {
     test.setTimeout(180000);
@@ -306,31 +335,22 @@ test.describe('Transfer Registration Automation', () => {
     await page.getByRole('textbox', { name: 'Enter Address' }).first().click();
     await page.getByRole('textbox', { name: 'Enter Address' }).first().fill('hssssssssssssssse3');
     await page.getByRole('checkbox', { name: 'Permanent Address same as' }).check();
-    await page.locator('.form-select.education').selectOption('16');
-    await page.locator('input[name="sessionFrom"]').click();
-    await page.getByText('2020').click();
-    await page.locator('input[name="sessionTo"]').click();
-    await page.getByText('2021').click();
-    await page.locator('input[name="passedYear"]').click();
-    await page.getByText('2021').click();
-    await page.getByRole('textbox', { name: 'Enter College Name' }).click();
-    await page.getByRole('textbox', { name: 'Enter College Name' }).fill('abshdskhf');
-    await page.getByRole('textbox', { name: 'Enter Examination Conducted By' }).click();
-    await page.getByRole('textbox', { name: 'Enter Examination Conducted By' }).fill('dddddddddddddd');
-    await page.getByRole('textbox', { name: 'Enter Board Name' }).click();
-    await page.getByRole('textbox', { name: 'Enter Board Name' }).fill('eeeeeeeee');
-    await page.getByRole('textbox', { name: 'Enter Secured Marks' }).click();
-    await page.getByRole('textbox', { name: 'Enter Secured Marks' }).fill('67');
+    await pickYear(page, page.locator('input[name="sessionFrom"]').first(), '2015');
+    await pickYear(page, page.locator('input[name="sessionTo"]').first(), '2017');
+    await pickYear(page, page.locator('input[name="passedYear"]').first(), '2017');
+    await page.getByRole('textbox', { name: 'Enter College Name' }).first().click();
+    await page.getByRole('textbox', { name: 'Enter College Name' }).first().fill('abshdskhf');
+    await page.getByRole('textbox', { name: 'Enter Examination Conducted By' }).first().click();
+    await page.getByRole('textbox', { name: 'Enter Examination Conducted By' }).first().fill('dddddddddddddd');
+    await page.getByRole('textbox', { name: 'Enter Board Name' }).first().click();
+    await page.getByRole('textbox', { name: 'Enter Board Name' }).first().fill('eeeeeeeee');
+    await page.getByRole('textbox', { name: 'Enter Secured Marks' }).first().click();
+    await page.getByRole('textbox', { name: 'Enter Secured Marks' }).first().fill('67');
     await briefPause();
-    await page.getByRole('button', { name: 'Add More' }).click();
-    await briefPause(250);
-    await page.locator('select[formcontrolname="educationId"]').nth(1).selectOption('17');
-    await page.locator('input[name="sessionFrom"]').nth(1).click();
-    await page.getByText('2022').click();
-    await page.locator('input[name="sessionTo"]').nth(1).click();
-    await page.getByText('2023').click();
-    await page.locator('input[name="passedYear"]').nth(1).click();
-    await page.getByText('2023').click();
+    // Fill the 2nd initial education row (Intermediate) BEFORE clicking Add More
+    await pickYear(page, page.locator('input[name="sessionFrom"]').nth(1), '2018');
+    await pickYear(page, page.locator('input[name="sessionTo"]').nth(1), '2020');
+    await pickYear(page, page.locator('input[name="passedYear"]').nth(1), '2020');
     await page.getByRole('textbox', { name: 'Enter College Name' }).nth(1).click();
     await page.getByRole('textbox', { name: 'Enter College Name' }).nth(1).fill('fffffffff');
     await page.getByRole('textbox', { name: 'Enter Examination Conducted By' }).nth(1).click();
@@ -340,48 +360,16 @@ test.describe('Transfer Registration Automation', () => {
     await page.getByRole('textbox', { name: 'Enter Secured Marks' }).nth(1).click();
     await page.getByRole('textbox', { name: 'Enter Secured Marks' }).nth(1).fill('77');
     await briefPause();
-    await page.locator('select[name="stateId"]').selectOption('12');
-    await page.getByRole('textbox', { name: 'Enter Current Registered' }).click();
-    await page.getByRole('textbox', { name: 'Enter Current Registered' }).fill('5555555y');
-    await page.locator('input[name="issueDate"]').click();
-    await page.getByRole('button', { name: '2026' }).click();
-    await page.getByText('2020').click();
-    await page.getByText('March').click();
-    await page.getByText('11').nth(2).click();
-    await page.locator('input[name="validTillDate"]').click();
-    await page.getByRole('button', { name: '2026' }).click();
-    await page.getByText('2034', { exact: true }).click();
-    await page.getByText('September').click();
-    await page.getByText('22').click();
-    const samplePdf = path.resolve(__dirname, '../../utils/Sample document.pdf');
-    await uploadPdfForLabel(page, /10th Marksheet/i, samplePdf, 0);
-    await uploadPdfForLabel(page, /10th Admit Card/i, samplePdf, 1);
-    await uploadPdfForLabel(page, /12th Marksheet/i, samplePdf, 2);
-    await uploadPdfForLabel(page, /12th Admit Card/i, samplePdf, 3);
-    await uploadPdfForLabel(page, /ANM Marksheet/i, samplePdf, 4);
-    await uploadPdfForLabel(page, /ANM Degree Certificate/i, samplePdf, 5);
-    await uploadPdfForLabel(page, /ANM Registration Certificate/i, samplePdf, 6);
-    await uploadPdfForLabel(page, /Caste Certificate/i, samplePdf, 7);
-    await page.getByRole('textbox', { name: 'Enter Mobile Number' }).click();
-    await page.getByRole('textbox', { name: 'Enter Mobile Number' }).fill(uniqueMobileNumber);
-    await page.getByRole('button', { name: 'Send OTP' }).click();
-    await page.getByRole('button', { name: 'OK' }).click();
-    await page.getByRole('textbox', { name: 'Enter OTP' }).click();
-    await page.getByRole('textbox', { name: 'Enter OTP' }).fill('123456');
-    await page.getByRole('button', { name: 'Verify OTP' }).click();
-    await page.getByRole('button', { name: 'OK' }).click();
-    await page.getByRole('textbox', { name: 'Enter Answer' }).click();
-    await page.getByRole('textbox', { name: 'Enter Answer' }).fill('1');
-    await page.getByRole('checkbox', { name: 'I Agree.I hereby declare that' }).check();
+    // Now click Add More to create the 3rd row (both initial rows are valid)
     await page.getByRole('button', { name: 'Add More' }).click();
     await briefPause(250);
-    await page.locator('select[formcontrolname="educationId"]').nth(2).selectOption('13');
-    await page.locator('input[name="sessionFrom"]').nth(2).click();
-    await page.getByText('2023').click();
-    await page.locator('input[name="sessionTo"]').nth(2).click();
-    await page.getByText('2025', { exact: true }).click();
-    await page.locator('input[name="passedYear"]').nth(2).click();
-    await page.getByText('2025', { exact: true }).click();
+    // Select education type for the 3rd row (Add More rows have a dropdown, unlike pre-populated rows)
+    await page.locator('select[formcontrolname="educationId"]').last().selectOption({ label: 'Auxiliary Nursing Midwifery (ANM Nursing)' });
+    await briefPause();
+    // Fill the 3rd row — must not overlap with row 1 (2022-2024)
+    await pickYear(page, page.locator('input[name="sessionFrom"]').nth(2), '2021');
+    await pickYear(page, page.locator('input[name="sessionTo"]').nth(2), '2023');
+    await pickYear(page, page.locator('input[name="passedYear"]').nth(2), '2023');
     await page.getByRole('textbox', { name: 'Enter College Name' }).nth(2).click();
     await page.getByRole('textbox', { name: 'Enter College Name' }).nth(2).fill('vvvvvvvvvvv');
     await page.getByRole('textbox', { name: 'Enter Examination Conducted By' }).nth(2).click();
@@ -391,8 +379,83 @@ test.describe('Transfer Registration Automation', () => {
     await page.getByRole('textbox', { name: 'Enter Secured Marks' }).nth(2).click();
     await page.getByRole('textbox', { name: 'Enter Secured Marks' }).nth(2).fill('88');
     await briefPause();
+    await page.locator('select[name="stateId"]').selectOption('12');
+    await page.getByRole('textbox', { name: 'Current Council Registration Number' }).fill('5555555y');
+    // Issue Date: fill directly in DD-MM-YYYY format (picker navigation unreliable)
+    await page.locator('input[name="issueDate"]').fill('11-03-2020');
+    await page.locator('input[name="issueDate"]').press('Tab');
+    await page.waitForTimeout(200);
+
+    // Valid Till Date: use picker (same pattern that worked)
+    await page.locator('input[name="validTillDate"]').click();
+    await page.waitForTimeout(300);
+    await page.locator('bs-datepicker-container button.current').nth(1).click();
+    await page.waitForTimeout(200);
+    for (let i = 0; i < 3; i++) {
+      if (await page.locator('bs-datepicker-container table.years td:not(.disabled) span').filter({ hasText: '2034' }).first().isVisible().catch(() => false)) break;
+      await page.locator('bs-datepicker-container button.next').first().click();
+      await page.waitForTimeout(200);
+    }
+    await page.locator('bs-datepicker-container table.years td:not(.disabled) span').filter({ hasText: '2034' }).first().click();
+    await page.waitForTimeout(200);
+    await page.locator('bs-datepicker-container').getByRole('gridcell', { name: 'September' }).click();
+    await page.waitForTimeout(200);
+    await page.locator('bs-datepicker-container').getByRole('gridcell', { name: '22', exact: true }).first().click();
+    await page.waitForTimeout(300);
+
+    // Create a minimal PNG for image-only fields (Applicant Photo, Upload Signature)
+    const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    const imagePath = path.resolve(__dirname, '../../utils/sample-photo.png');
+    fs.writeFileSync(imagePath, Buffer.from(pngBase64, 'base64'));
+    const samplePdf = path.resolve(__dirname, '../../utils/Sample document.pdf');
+
+    // Dismiss any file-type validation dialog that may appear
+    const dismissFileDialog = async () => {
+      const okBtn = page.locator('div.swal2-popup button.swal2-confirm').first();
+      if (await okBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+        await okBtn.click();
+        await page.waitForTimeout(300);
+      }
+    };
+
+    // Upload image files for photo/signature, PDFs for document fields
+    // Label names match exactly what the form shows in the snapshot
+    await uploadPdfForLabel(page, /Applicant Photo/i, imagePath, 0);
+    await dismissFileDialog();
+    await uploadPdfForLabel(page, /Upload Signature/i, imagePath, 1);
+    await dismissFileDialog();
+    await uploadPdfForLabel(page, /^10th Certificate/i, samplePdf, 2);
+    await dismissFileDialog();
+    await uploadPdfForLabel(page, /^12th Certificate/i, samplePdf, 3);
+    await dismissFileDialog();
+    await uploadPdfForLabel(page, /^12th Marksheet/i, samplePdf, 4);
+    await dismissFileDialog();
+    await uploadPdfForLabel(page, /ANM.*Admit Card/i, samplePdf, 5);
+    await dismissFileDialog();
+    await uploadPdfForLabel(page, /^Caste Certificate/i, samplePdf, 6);
+    await dismissFileDialog();
+    await uploadPdfForLabel(page, /ANM.*Marksheet/i, samplePdf, 7);
+    await dismissFileDialog();
+    await uploadPdfForLabel(page, /ANM.*Degree/i, samplePdf, 8);
+    await dismissFileDialog();
+    await uploadPdfForLabel(page, /ANM.*Registration Certificate/i, samplePdf, 9);
+    await dismissFileDialog();
+    await page.getByRole('textbox', { name: 'Enter Applicant Phone Number' }).click();
+    await page.getByRole('textbox', { name: 'Enter Applicant Phone Number' }).fill(uniqueMobileNumber);
+    await page.getByRole('button', { name: 'Send OTP' }).click();
+    await page.getByRole('button', { name: 'OK' }).click();
+    await page.getByRole('textbox', { name: 'Enter OTP' }).click();
+    await page.getByRole('textbox', { name: 'Enter OTP' }).fill('123456');
+    await page.getByRole('button', { name: 'Verify OTP' }).click();
+    await page.getByRole('button', { name: 'OK' }).click();
+    await page.getByRole('textbox', { name: 'Enter Answer' }).click();
+    await page.getByRole('textbox', { name: 'Enter Answer' }).fill('1');
+    await page.getByRole('checkbox', { name: 'I Agree.I hereby declare that' }).check();
     await page.getByRole('button', { name: 'Submit' }).click();
-    await page.getByRole('button', { name: 'Yes, save it!' }).click();
+    // The submit may show a SweetAlert confirmation — click it
+    const confirmBtn = page.locator('div.swal2-popup button.swal2-confirm');
+    await confirmBtn.waitFor({ state: 'visible', timeout: 15000 });
+    await confirmBtn.click();
 
     const swalContainer = page.locator('div.swal2-html-container').first();
     await expect(swalContainer).toContainText(/TEMP\d+/);
