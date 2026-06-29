@@ -440,6 +440,8 @@ test.describe('Transfer Registration Automation', () => {
     await dismissFileDialog();
     await uploadPdfForLabel(page, /ANM.*Registration Certificate/i, samplePdf, 9);
     await dismissFileDialog();
+    await uploadPdfForLabel(page, /INC Suitability/i, samplePdf, 10);
+    await dismissFileDialog();
     await page.getByRole('textbox', { name: 'Enter Applicant Phone Number' }).click();
     await page.getByRole('textbox', { name: 'Enter Applicant Phone Number' }).fill(uniqueMobileNumber);
     await page.getByRole('button', { name: 'Send OTP' }).click();
@@ -448,8 +450,25 @@ test.describe('Transfer Registration Automation', () => {
     await page.getByRole('textbox', { name: 'Enter OTP' }).fill('123456');
     await page.getByRole('button', { name: 'Verify OTP' }).click();
     await page.getByRole('button', { name: 'OK' }).click();
+    // Read the captcha expression and compute the answer dynamically
+    const captchaAnswer = await page.evaluate(() => {
+      const els = document.querySelectorAll('*');
+      for (const el of els) {
+        if (el.children.length === 0) {
+          const match = el.textContent.match(/=\s*(\d+)\s*([+\-*/])\s*(\d+)/);
+          if (match) {
+            const a = parseInt(match[1]), op = match[2], b = parseInt(match[3]);
+            if (op === '+') return String(a + b);
+            if (op === '-') return String(a - b);
+            if (op === '*') return String(a * b);
+            if (op === '/') return String(Math.floor(a / b));
+          }
+        }
+      }
+      return '1';
+    });
     await page.getByRole('textbox', { name: 'Enter Answer' }).click();
-    await page.getByRole('textbox', { name: 'Enter Answer' }).fill('1');
+    await page.getByRole('textbox', { name: 'Enter Answer' }).fill(captchaAnswer);
     await page.getByRole('checkbox', { name: 'I Agree.I hereby declare that' }).check();
     await page.getByRole('button', { name: 'Submit' }).click();
     // The submit may show a SweetAlert confirmation — click it

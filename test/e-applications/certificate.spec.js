@@ -83,8 +83,9 @@ test.describe('Certificate Verification Automation', () => {
 
     await page.locator("select[formcontrolname='course']").selectOption('2');
 
-    // Fill Registration Number (required field)
-    await fillField(page.locator("input[formcontrolname='registrationNumber']"), 'REG2020001');
+    // Fill Registration Number — short numeric format matching BNRC style
+    const uniqueRegNumber = `${Math.floor(10000000 + Math.random() * 90000000)}`;
+    await fillField(page.locator("input[formcontrolname='registrationNumber']"), uniqueRegNumber);
 
     // Session From and Session To — MM-YYYY text inputs (not year pickers)
     await fillField(page.locator("input[name='sessionFrom']"), '06-2020');
@@ -168,7 +169,22 @@ test.describe('Certificate Verification Automation', () => {
     await fillField(page.locator("input[formcontrolname='agencyName']"), 'agencyagency');
     await page.locator("input[name='uploadCertificate']").setInputFiles(sampleDocumentPath);
 
-    await fillField(page.locator("input[formcontrolname='captcha']"), '1');
+    // Read the captcha expression from the page and compute the answer
+    const captchaAnswer = await page.evaluate(() => {
+      const el = document.querySelector("input[formcontrolname='captcha']");
+      if (!el) return '1';
+      const container = el.closest('div, form, section') || document.body;
+      const text = container.innerText || '';
+      const match = text.match(/=\s*(\d+)\s*([+\-*/])\s*(\d+)/);
+      if (!match) return '1';
+      const a = parseInt(match[1]), op = match[2], b = parseInt(match[3]);
+      if (op === '+') return String(a + b);
+      if (op === '-') return String(a - b);
+      if (op === '*') return String(a * b);
+      if (op === '/') return String(Math.floor(a / b));
+      return '1';
+    });
+    await fillField(page.locator("input[formcontrolname='captcha']"), captchaAnswer);
 
     const declarationCheckbox = page.locator("input[type='checkbox']#flexCheckDefault");
     await declarationCheckbox.scrollIntoViewIfNeeded();
@@ -176,13 +192,19 @@ test.describe('Certificate Verification Automation', () => {
 
     await page.locator("button[type='submit'].btn-success").click();
 
-    const yesSubmitButton = page.getByRole('button', { name: /Yes, Submit it!/i });
-    await yesSubmitButton.click();
+    // Confirm the submission dialog — use Promise.all to avoid hanging on navigation wait
+    await Promise.all([
+      page.waitForURL(url => true, { timeout: 30000 }).catch(() => {}),
+      page.getByRole('button', { name: /Yes, Submit it!/i }).click({ timeout: 8000 }).catch(() =>
+        page.locator('div.swal2-popup button.swal2-confirm').click({ force: true, timeout: 5000 }).catch(() => {})
+      ),
+    ]);
+    await page.waitForTimeout(2000);
 
     const swalContainer = page.locator('div.swal2-html-container').first();
-    await expect(swalContainer).toContainText(/TEMP\d+/);
+    await expect(swalContainer).toContainText(/TEMP\d+/, { timeout: 15000 });
 
-    const swalText = await swalContainer.innerText();
+    const swalText = await swalContainer.innerText().catch(() => '');
     const tempIdMatch = swalText.match(/TEMP\d+/);
     const tempId = tempIdMatch ? tempIdMatch[0] : 'Not-found';
 
